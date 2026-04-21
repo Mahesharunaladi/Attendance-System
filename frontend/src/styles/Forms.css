@@ -11,7 +11,7 @@
   padding: 3rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 500px;
+  max-width: 560px;
 }
 
 .form-card h2 {
@@ -44,6 +44,7 @@
   border-radius: 4px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -61,12 +62,131 @@
   font-size: 0.85rem;
   color: #27ae60;
   font-weight: 500;
+  text-align: center;
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+.camera-section {
+  width: 100%;
+}
+
+.camera-frame {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid #d6dde5;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f4f7fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-canvas {
+  display: none;
+}
+
+.camera-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.secondary-btn {
+  min-width: 160px;
+  padding: 0.7rem 1rem;
+  background: #eef4fb;
+  color: #2c3e50;
+  border: 1px solid #c8d7ea;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: #dfeefc;
+  border-color: #9dc4eb;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.camera-help,
+.camera-error {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.camera-help {
+  color: #5f6c7b;
+}
+
+.camera-error {
+  color: #c0392b;
+}
+
+.location-status {
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.location-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.location-badge.success {
+  background: #eaf7ee;
+  color: #1d6f42;
+  border: 1px solid #bfe3cb;
+}
+
+.location-badge.pending {
+  background: #f4f7fb;
+  color: #526273;
+  border: 1px solid #d6dde5;
+}
+
+.location-refresh-btn {
+  padding: 0.65rem 0.9rem;
+  background: white;
+  color: #2c3e50;
+  border: 1px solid #c8d7ea;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.location-refresh-btn:hover:not(:disabled) {
+  background: #eef4fb;
+  border-color: #9dc4eb;
+}
+
+.location-refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .submit-btn {
@@ -113,9 +233,5 @@
 @media (max-width: 768px) {
   .form-card {
     padding: 1.5rem;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
   }
 }

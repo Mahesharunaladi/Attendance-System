@@ -97,6 +97,13 @@
             <version>1.0.0-M2</version>
         </dependency>
 
+        <!-- OpenCV Core -->
+        <dependency>
+            <groupId>org.openpnp</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.5.0-0</version>
+        </dependency>
+
         <!-- REST API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -120,6 +127,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.waste.management.WasteManagementApplication</mainClass>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

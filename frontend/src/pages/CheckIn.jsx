@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { attendanceAPI } from '../services/api';
+import LiveCameraCapture from '../components/LiveCameraCapture';
+import { getCurrentLocation } from '../utils/location';
 import '../styles/Forms.css';
 
 export default function CheckIn() {
   const [formData, setFormData] = useState({
     employeeId: '',
-    latitude: '',
-    longitude: '',
     imageFile: null,
   });
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [location, setLocation] = useState(null);
+  const [locationError, setLocationError] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
 
@@ -18,9 +21,26 @@ export default function CheckIn() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
-    setFormData(prev => ({ ...prev, imageFile: e.target.files[0] }));
+  const loadLocation = async () => {
+    setLocating(true);
+    setLocationError('');
+
+    try {
+      const coords = await getCurrentLocation();
+      setLocation(coords);
+      return coords;
+    } catch (error) {
+      setLocation(null);
+      setLocationError(error.message);
+      throw error;
+    } finally {
+      setLocating(false);
+    }
   };
+
+  useEffect(() => {
+    loadLocation().catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,15 +48,16 @@ export default function CheckIn() {
     setMessage('');
 
     try {
+      const coords = await loadLocation();
       await attendanceAPI.checkIn(
         formData.employeeId,
         formData.imageFile,
-        formData.latitude,
-        formData.longitude
+        coords.latitude,
+        coords.longitude
       );
       setMessageType('success');
       setMessage('✓ Check-in successful!');
-      setFormData({ employeeId: '', latitude: '', longitude: '', imageFile: null });
+      setFormData({ employeeId: '', imageFile: null });
     } catch (error) {
       setMessageType('error');
       setMessage('✗ ' + (error.response?.data?.message || 'Check-in failed'));
@@ -67,48 +88,39 @@ export default function CheckIn() {
 
           <div className="form-group">
             <label htmlFor="imageFile">Capture Image *</label>
-            <input
-              id="imageFile"
-              type="file"
-              name="imageFile"
-              accept="image/*"
-              onChange={handleFileChange}
-              required
+            <LiveCameraCapture
+              imageFile={formData.imageFile}
+              onCapture={(imageFile) =>
+                setFormData(prev => ({ ...prev, imageFile }))
+              }
             />
-            {formData.imageFile && <p className="file-name">{formData.imageFile.name}</p>}
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="latitude">Latitude *</label>
-              <input
-                id="latitude"
-                type="number"
-                name="latitude"
-                step="0.0001"
-                value={formData.latitude}
-                onChange={handleInputChange}
-                placeholder="-90 to 90"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="longitude">Longitude *</label>
-              <input
-                id="longitude"
-                type="number"
-                name="longitude"
-                step="0.0001"
-                value={formData.longitude}
-                onChange={handleInputChange}
-                placeholder="-180 to 180"
-                required
-              />
-            </div>
+          <div className="location-status">
+            <span className={location ? 'location-badge success' : 'location-badge pending'}>
+              {locating
+                ? 'Detecting current location...'
+                : location
+                  ? `Location captured automatically: ${location.latitude}, ${location.longitude}`
+                  : 'Location will be captured automatically'}
+            </span>
+            <button
+              type="button"
+              className="location-refresh-btn"
+              onClick={() => loadLocation().catch(() => {})}
+              disabled={locating || loading}
+            >
+              {locating ? 'Detecting...' : 'Refresh Location'}
+            </button>
           </div>
 
-          <button type="submit" disabled={loading} className="submit-btn">
+          {locationError && <p className="camera-error">{locationError}</p>}
+
+          <button
+            type="submit"
+            disabled={loading || locating || !formData.imageFile || !location}
+            className="submit-btn"
+          >
             {loading ? 'Processing...' : 'Check In'}
           </button>
         </form>
