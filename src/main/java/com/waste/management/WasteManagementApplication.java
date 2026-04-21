@@ -1,7 +1,6 @@
 package com.waste.management;
 
 import com.waste.management.config.HibernateConfig;
-import com.waste.management.entity.AttendanceStatus;
 import com.waste.management.entity.Worker;
 import com.waste.management.entity.WorkerRole;
 import com.waste.management.repository.AttendanceRepository;
@@ -59,7 +58,7 @@ public class WasteManagementApplication {
         worker.setActive(true);
         worker.setCreatedAt(LocalDateTime.now());
 
-        Worker savedWorker = workerRepository.save(worker);
+        workerRepository.save(worker);
         logger.info("Worker registered successfully: {} ({})", fullName, employeeId);
     }
 

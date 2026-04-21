@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.waste.management</groupId>
-    <artifactId>attendance-system-face-recognition</artifactId>
+    <artifactId>attendance-system-backend</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Attendance System - Face Recognition</name>
-    <description>Automated attendance system for waste management workers using face recognition</description>
+    <name>Attendance System - Backend</name>
+    <description>Backend API for waste management attendance system with face recognition</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -30,7 +30,8 @@
         <!-- Face Recognition: OpenCV - Add manually to lib/ folder -->
         <!-- Download from: https://opencv.org/releases/ -->
         <!-- Or use: mvn install:install-file -Dfile=opencv-java450.jar -DgroupId=org.opencv -DartifactId=opencv -Dversion=4.5.0 -Dpackaging=jar -->
-       <!-- Database -->
+
+        <!-- Database -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -78,25 +79,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JavaFX for GUI -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>21</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>21</version>
-        </dependency>
-
-        <!-- Deep Learning: DL4J for ML models -->
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-core</artifactId>
-            <version>1.0.0-M2</version>
-        </dependency>
-
         <!-- REST API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -115,6 +97,19 @@
                     <source>17</source>
                     <target>17</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

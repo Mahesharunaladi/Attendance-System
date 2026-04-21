@@ -1,0 +1,196 @@
+.report-container,
+.tasks-container,
+.workers-container {
+  padding: 2rem;
+}
+
+.report-container h1,
+.tasks-container h1,
+.workers-container h1 {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+}
+
+.filter-section {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-section .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-section label {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.filter-section input {
+  padding: 0.5rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.fetch-btn,
+.filter-btn {
+  padding: 0.5rem 1.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.fetch-btn:hover,
+.filter-btn:hover {
+  background: #2980b9;
+}
+
+.filter-btn.active {
+  background: #27ae60;
+}
+
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table thead {
+  background: #34495e;
+  color: white;
+}
+
+.report-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.report-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.report-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status.present,
+.status.completed,
+.status.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.absent {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status.late {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.pending {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.status.in_progress,
+.status.in-progress {
+  background: #e7d4f5;
+  color: #5a1f7d;
+}
+
+.status.cancelled {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.status.inactive {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  border: 1px solid #f5c6cb;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 8px;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-section input,
+  .fetch-btn,
+  .filter-btn {
+    width: 100%;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+}

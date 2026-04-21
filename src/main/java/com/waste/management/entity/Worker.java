@@ -38,6 +38,17 @@ public class Worker {
     @Column(nullable = false)
     private boolean active;
 
+    // Additional fields for detailed worker information
+    @Column(name = "aadhar_number", unique = true)
+    private String aadharNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    private Gender gender;
+
+    @Column(name = "caste")
+    private String caste;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -77,4 +88,13 @@ public class Worker {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getAadharNumber() { return aadharNumber; }
+    public void setAadharNumber(String aadharNumber) { this.aadharNumber = aadharNumber; }
+
+    public Gender getGender() { return gender; }
+    public void setGender(Gender gender) { this.gender = gender; }
+
+    public String getCaste() { return caste; }
+    public void setCaste(String caste) { this.caste = caste; }
 }

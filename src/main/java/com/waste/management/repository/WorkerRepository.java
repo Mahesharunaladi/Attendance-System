@@ -1,6 +1,7 @@
 package com.waste.management.repository;
 
 import com.waste.management.entity.Worker;
+import com.waste.management.entity.WorkerRole;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -99,6 +100,16 @@ public class WorkerRepository {
         } finally {
             session.close();
         }
+    }
+
+    /**
+     * Find workers by WorkerRole enum
+     *
+     * @param role Worker role enum
+     * @return List of workers with specific role
+     */
+    public List<Worker> findByRole(WorkerRole role) {
+        return findByRole(role.getDisplayName());
     }
 
     /**
