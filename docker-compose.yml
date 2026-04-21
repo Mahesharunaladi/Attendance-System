@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: waste-management-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: waste_management
+      MYSQL_USER: waste_user
+      MYSQL_PASSWORD: waste_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/database_setup.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - waste-management-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Waste Management Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waste-management-app
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: waste_management
+      DB_USER: waste_user
+      DB_PASSWORD: waste_password
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+      LOG_LEVEL: INFO
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+      - ./data/faces:/app/data/faces
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - waste-management-network
+    restart: unless-stopped
+
+  # phpMyAdmin for Database Management (Optional)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: waste-management-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: waste_user
+      PMA_PASSWORD: waste_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - waste-management-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  waste-management-network:
+    driver: bridge

@@ -1,0 +1,87 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.backup
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+*.ipr
+.gradle/
+build/
+.metadata/
+bin/
+tmp/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sql.bak
+
+# Runtime
+data/
+output/
+temp/
+cache/
+
+# Environment
+.env
+.env.local
+env.properties
+
+# Credentials
+credentials.json
+config.json
+secrets.json
+
+# System
+.classpath
+.project
+.settings/
+.c9/
+
+# Test coverage
+coverage/
+.coverage
+htmlcov/
+
+# Dependencies
+node_modules/
+lib/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Compiled files
+*.class
+*.jar
+!*dependency-jars*.jar
+
+# Package Files
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# OS specific
+Thumbs.db
+.DS_Store
