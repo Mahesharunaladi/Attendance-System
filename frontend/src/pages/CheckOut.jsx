@@ -135,6 +135,16 @@ export default function CheckOut() {
               onCapture={(imageFile) =>
                 setFormData(prev => ({ ...prev, imageFile }))
               }
+              onWorkerDetected={(worker) => {
+                setFormData(prev => ({
+                  ...prev,
+                  employeeId: worker.employeeId || '',
+                }));
+                // Fetch status for this worker
+                setTimeout(() => {
+                  fetchTodayStatus(worker.employeeId);
+                }, 300);
+              }}
             />
           </div>
 
