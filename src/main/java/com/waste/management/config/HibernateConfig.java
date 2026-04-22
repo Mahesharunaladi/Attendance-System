@@ -14,19 +14,31 @@ public class HibernateConfig {
 
     static {
         try {
-            // Create service registry
-            StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
-                    .configure("hibernate.cfg.xml")
-                    .build();
-
-            // Create metadata sources
-            MetadataSources metadataSources = new MetadataSources(registry);
-
-            // Build metadata
-            Metadata metadata = metadataSources.buildMetadata();
-
-            // Create session factory
-            sessionFactory = metadata.getSessionFactoryBuilder().build();
+            // Use H2 embedded database by default for Spring Boot
+            try {
+                StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+                        .configure("hibernate-h2.cfg.xml")
+                        .build();
+                MetadataSources metadataSources = new MetadataSources(registry);
+                Metadata metadata = metadataSources.buildMetadata();
+                sessionFactory = metadata.getSessionFactoryBuilder().build();
+                System.out.println("Successfully initialized Hibernate with H2 embedded database");
+            } catch (Exception h2Exception) {
+                System.out.println("H2 initialization failed, trying MySQL...");
+                // Fall back to MySQL
+                try {
+                    StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+                            .configure("hibernate.cfg.xml")
+                            .build();
+                    MetadataSources metadataSources = new MetadataSources(registry);
+                    Metadata metadata = metadataSources.buildMetadata();
+                    sessionFactory = metadata.getSessionFactoryBuilder().build();
+                    System.out.println("Successfully initialized Hibernate with MySQL");
+                } catch (Exception mysqlException) {
+                    System.err.println("Both H2 and MySQL initialization failed!");
+                    throw mysqlException;
+                }
+            }
         } catch (Exception e) {
             System.err.println("Failed to initialize Hibernate SessionFactory: " + e.getMessage());
             e.printStackTrace();

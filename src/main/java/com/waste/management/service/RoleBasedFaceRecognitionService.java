@@ -20,6 +20,7 @@ public class RoleBasedFaceRecognitionService {
     
     // Role-specific configurations
     private static final double DRIVER_MATCH_THRESHOLD = 0.80;      // Stricter threshold for drivers
+    @SuppressWarnings("unused")
     private static final double WORKER_MATCH_THRESHOLD = 0.75;      // Standard threshold for other workers
     private static final double CLEANER_MATCH_THRESHOLD = 0.75;
     private static final double HELPER_MATCH_THRESHOLD = 0.75;
@@ -27,7 +28,9 @@ public class RoleBasedFaceRecognitionService {
     private static final double MANAGER_MATCH_THRESHOLD = 0.78;     // Slightly stricter for managers
     
     private static final String HAAR_CASCADE_PATH = "haarcascade_frontalface_alt.xml";
+    @SuppressWarnings("unused")
     private static final String DRIVER_MODEL_PATH = "models/driver_face_model.dat";
+    @SuppressWarnings("unused")
     private static final String WORKER_MODEL_PATH = "models/worker_face_model.dat";
     
     private CascadeClassifier faceDetector;
@@ -36,7 +39,12 @@ public class RoleBasedFaceRecognitionService {
     private Map<WorkerRole, FaceModel> roleModels;
     
     static {
-        nu.pattern.OpenCV.loadLocally();
+        try {
+            // Load OpenCV native library
+            System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+        } catch (UnsatisfiedLinkError | ExceptionInInitializerError e) {
+            logger.warn("OpenCV native library not available. Some face recognition features may not work.", e);
+        }
     }
     
     public RoleBasedFaceRecognitionService() {

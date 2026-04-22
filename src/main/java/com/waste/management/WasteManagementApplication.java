@@ -3,6 +3,7 @@ package com.waste.management;
 import com.waste.management.config.HibernateConfig;
 import com.waste.management.entity.Worker;
 import com.waste.management.entity.WorkerRole;
+import com.waste.management.entity.Gender;
 import com.waste.management.repository.AttendanceRepository;
 import com.waste.management.repository.WorkerRepository;
 import com.waste.management.repository.WasteTaskRepository;
@@ -38,7 +39,7 @@ public class WasteManagementApplication {
         this.attendanceRepository = new AttendanceRepository(sessionFactory);
         this.wasteTaskRepository = new WasteTaskRepository(sessionFactory);
         this.faceRecognitionService = new FaceRecognitionService();
-        this.attendanceService = new AttendanceService(attendanceRepository, faceRecognitionService);
+        this.attendanceService = new AttendanceService(attendanceRepository, faceRecognitionService, workerRepository);
         this.wasteManagementService = new WasteManagementService(wasteTaskRepository);
     }
 
@@ -47,6 +48,16 @@ public class WasteManagementApplication {
      */
     public void registerWorker(String employeeId, String fullName, String email, 
                               String phoneNumber, WorkerRole role, String facialDataPath) {
+        registerWorker(employeeId, fullName, email, phoneNumber, role, facialDataPath, 
+                      null, null, null);
+    }
+
+    /**
+     * Register a new worker with all details
+     */
+    public void registerWorker(String employeeId, String fullName, String email, 
+                              String phoneNumber, WorkerRole role, String facialDataPath,
+                              String aadharNumber, String gender, String caste) {
         Worker worker = new Worker();
         worker.setEmployeeId(employeeId);
         worker.setFullName(fullName);
@@ -57,6 +68,11 @@ public class WasteManagementApplication {
         worker.setDepartment("Waste Management");
         worker.setActive(true);
         worker.setCreatedAt(LocalDateTime.now());
+        worker.setAadharNumber(aadharNumber);
+        if (gender != null) {
+            worker.setGender(Gender.valueOf(gender.toUpperCase()));
+        }
+        worker.setCaste(caste);
 
         workerRepository.save(worker);
         logger.info("Worker registered successfully: {} ({})", fullName, employeeId);
@@ -106,16 +122,22 @@ public class WasteManagementApplication {
      * Get today's attendance statistics
      */
     public void displayTodayStatistics() {
-        List<Worker> allWorkers = workerRepository.findAllActive();
-        long presentCount = attendanceService.getTodayAttendanceCount();
-        long absentCount = attendanceService.getAbsenteeCount(allWorkers, 
-                                                             java.time.LocalDate.now());
+        try {
+            List<Worker> allWorkers = workerRepository.findAllActive();
+            long presentCount = attendanceService.getTodayAttendanceCount();
+            long absentCount = attendanceService.getAbsenteeCount(allWorkers, 
+                                                                 java.time.LocalDate.now());
 
-        logger.info("=== Today's Attendance Statistics ===");
-        logger.info("Total Active Workers: {}", allWorkers.size());
-        logger.info("Present: {}", presentCount);
-        logger.info("Absent: {}", absentCount);
-        logger.info("Attendance Rate: {:.2f}%", (presentCount * 100.0 / allWorkers.size()));
+            logger.info("=== Today's Attendance Statistics ===");
+            logger.info("Total Active Workers: {}", allWorkers.size());
+            logger.info("Present: {}", presentCount);
+            logger.info("Absent: {}", absentCount);
+            if (allWorkers.size() > 0) {
+                logger.info("Attendance Rate: {:.2f}%", (presentCount * 100.0 / allWorkers.size()));
+            }
+        } catch (Exception e) {
+            logger.warn("Could not calculate statistics: {}", e.getMessage());
+        }
     }
 
     /**
@@ -148,7 +170,7 @@ public class WasteManagementApplication {
      * Get workers by role
      */
     public void listWorkersByRole(WorkerRole role) {
-        List<Worker> workers = workerRepository.findByRole(role.toString());
+        List<Worker> workers = workerRepository.findByRole(role);
         logger.info("=== {} ===", role.getDisplayName() + "s");
         for (Worker worker : workers) {
             logger.info("Name: {} | Email: {}", worker.getFullName(), worker.getEmail());
@@ -161,13 +183,34 @@ public class WasteManagementApplication {
         try {
             WasteManagementApplication app = new WasteManagementApplication();
             
-            // Example: Register workers
-            app.registerWorker("EMP001", "John Cleaner", "john@waste.com", "9999000001", 
-                             WorkerRole.CLEANER, "data/faces/john_face.jpg");
-            app.registerWorker("EMP002", "Mike Driver", "mike@waste.com", "9999000002", 
-                             WorkerRole.DRIVER, "data/faces/mike_face.jpg");
-            app.registerWorker("EMP003", "Sarah Helper", "sarah@waste.com", "9999000003", 
-                             WorkerRole.HELPER, "data/faces/sarah_face.jpg");
+            // Register workers with complete details
+            app.registerWorker("EMP001", "John Cleaner", "john@waste.com", "9876543210", 
+                             WorkerRole.CLEANER, "data/faces/john_face.jpg",
+                             "123456789012", "MALE", "General");
+            
+            app.registerWorker("EMP002", "Mike Driver", "mike@waste.com", "9876543211", 
+                             WorkerRole.DRIVER, "data/faces/mike_face.jpg",
+                             "123456789013", "MALE", "General");
+            
+            app.registerWorker("EMP003", "Sarah Helper", "sarah@waste.com", "9876543212", 
+                             WorkerRole.HELPER, "data/faces/sarah_face.jpg",
+                             "123456789014", "FEMALE", "OBC");
+            
+            app.registerWorker("EMP004", "Rajesh Supervisor", "rajesh@waste.com", "9876543213", 
+                             WorkerRole.SUPERVISOR, "data/faces/rajesh_face.jpg",
+                             "123456789015", "MALE", "SC");
+            
+            app.registerWorker("EMP005", "Priya Manager", "priya@waste.com", "9876543214", 
+                             WorkerRole.MANAGER, "data/faces/priya_face.jpg",
+                             "123456789016", "FEMALE", "General");
+            
+            app.registerWorker("EMP006", "Amit Worker", "amit@waste.com", "9876543215", 
+                             WorkerRole.CLEANER, "data/faces/worker_amit_face.txt",
+                             "123456789017", "MALE", "ST");
+            
+            app.registerWorker("EMP007", "Neha Driver", "neha@waste.com", "9876543216", 
+                             WorkerRole.DRIVER, "data/faces/neha_face.jpg",
+                             "123456789018", "FEMALE", "General");
             
             // List all workers
             app.listAllWorkers();
@@ -177,6 +220,7 @@ public class WasteManagementApplication {
             app.displayWasteStatistics();
             
             logger.info("Application running successfully!");
+            logger.info("Total Workers Registered: 7");
             
         } catch (Exception e) {
             logger.error("Application error", e);

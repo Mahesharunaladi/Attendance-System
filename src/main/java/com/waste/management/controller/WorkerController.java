@@ -5,6 +5,7 @@ import com.waste.management.entity.WorkerRole;
 import com.waste.management.repository.WorkerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -15,6 +16,9 @@ import java.util.Optional;
 /**
  * REST Controller for Worker Management API endpoints
  */
+@RestController
+@RequestMapping("/api/workers")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class WorkerController {
     private static final Logger logger = LoggerFactory.getLogger(WorkerController.class);
     
@@ -25,11 +29,77 @@ public class WorkerController {
     }
 
     /**
+     * GET /api/workers
+     * Get all workers
+     */
+    @GetMapping
+    public List<Worker> getAllWorkers() {
+        logger.info("Fetching all workers");
+        return workerRepository.findAll();
+    }
+
+    /**
+     * GET /api/workers/{id}
+     * Get worker by ID
+     */
+    @GetMapping("/{id}")
+    public Map<String, Object> getWorkerById(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<Worker> worker = workerRepository.findById(id);
+            if (worker.isPresent()) {
+                response.put("success", true);
+                response.put("data", worker.get());
+            } else {
+                response.put("success", false);
+                response.put("message", "Worker not found");
+                response.put("code", 404);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            response.put("code", 500);
+        }
+        return response;
+    }
+
+    /**
+     * GET /api/workers/employee/{employeeId}
+     * Get worker by employee ID
+     */
+    @GetMapping("/employee/{employeeId}")
+    public Map<String, Object> getWorkerByEmployeeId(@PathVariable String employeeId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<Worker> worker = workerRepository.findByEmployeeId(employeeId);
+            if (worker.isPresent()) {
+                response.put("success", true);
+                response.put("data", worker.get());
+            } else {
+                response.put("success", false);
+                response.put("message", "Worker not found");
+                response.put("code", 404);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            response.put("code", 500);
+        }
+        return response;
+    }
+
+    /**
      * POST /api/workers/register
      * Register a new worker
      */
-    public Map<String, Object> registerWorker(String employeeId, String fullName, String email,
-                                             String phoneNumber, String role, String facialDataPath) {
+    @PostMapping("/register")
+    public Map<String, Object> registerWorker(
+            @RequestParam String employeeId,
+            @RequestParam String fullName,
+            @RequestParam String email,
+            @RequestParam String phoneNumber,
+            @RequestParam String role,
+            @RequestParam String facialDataPath) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -137,37 +207,11 @@ public class WorkerController {
     }
 
     /**
-     * GET /api/workers/all
-     * Get all active workers
-     */
-    public Map<String, Object> getAllWorkers() {
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            List<Worker> workers = workerRepository.findAllActive();
-            
-            Map<String, Object> data = new HashMap<>();
-            data.put("total_workers", workers.size());
-            data.put("workers", workers);
-
-            response.put("success", true);
-            response.put("data", data);
-            response.put("code", 200);
-        } catch (Exception e) {
-            logger.error("Error getting all workers", e);
-            response.put("success", false);
-            response.put("message", "Server error: " + e.getMessage());
-            response.put("code", 500);
-        }
-        
-        return response;
-    }
-
-    /**
      * GET /api/workers/role/{role}
      * Get workers by role
      */
-    public Map<String, Object> getWorkersByRole(String role) {
+    @GetMapping("/role/{role}")
+    public Map<String, Object> getWorkersByRole(@PathVariable String role) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -205,7 +249,10 @@ public class WorkerController {
      * PUT /api/workers/{workerId}
      * Update worker information
      */
-    public Map<String, Object> updateWorker(Long workerId, String email, String phoneNumber) {
+    @PutMapping("/{workerId}")
+    public Map<String, Object> updateWorker(@PathVariable Long workerId,
+                                           @RequestParam(required = false) String email,
+                                           @RequestParam(required = false) String phoneNumber) {
         Map<String, Object> response = new HashMap<>();
         
         try {

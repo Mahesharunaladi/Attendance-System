@@ -113,6 +113,21 @@ public class WorkerRepository {
     }
 
     /**
+     * Find all workers
+     *
+     * @return List of all workers
+     */
+    public List<Worker> findAll() {
+        Session session = sessionFactory.openSession();
+        try {
+            Query<Worker> query = session.createQuery("FROM Worker", Worker.class);
+            return query.list();
+        } finally {
+            session.close();
+        }
+    }
+
+    /**
      * Delete worker
      *
      * @param id Worker ID

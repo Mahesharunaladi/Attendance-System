@@ -4,6 +4,7 @@ import com.waste.management.entity.AttendanceRecord;
 import com.waste.management.entity.AttendanceStatus;
 import com.waste.management.entity.Worker;
 import com.waste.management.repository.AttendanceRepository;
+import com.waste.management.repository.WorkerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +24,14 @@ public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final FaceRecognitionService faceRecognitionService;
+    private final WorkerRepository workerRepository;
 
     public AttendanceService(AttendanceRepository attendanceRepository, 
-                            FaceRecognitionService faceRecognitionService) {
+                            FaceRecognitionService faceRecognitionService,
+                            WorkerRepository workerRepository) {
         this.attendanceRepository = attendanceRepository;
         this.faceRecognitionService = faceRecognitionService;
+        this.workerRepository = workerRepository;
     }
 
     /**
@@ -168,5 +172,49 @@ public class AttendanceService {
     public long getAbsenteeCount(List<Worker> allWorkers, LocalDate date) {
         long presentCount = attendanceRepository.countTodayCheckIns(date);
         return allWorkers.size() - presentCount;
+    }
+
+    /**
+     * Identify worker from captured face image
+     * Compares the provided face image against all registered workers' facial data
+     *
+     * @param imagePath Path to captured face image
+     * @return Optional containing the identified worker if found
+     */
+    public Optional<Worker> identifyWorkerFromFace(String imagePath) {
+        try {
+            // Get all active workers
+            List<Worker> allWorkers = workerRepository.findAllActive();
+            
+            double highestConfidence = 0.0;
+            Worker bestMatch = null;
+
+            // Compare face against all workers
+            for (Worker worker : allWorkers) {
+                try {
+                    double confidence = faceRecognitionService.compareFaces(imagePath, worker.getFacialDataPath());
+                    
+                    // Check if this is the best match so far
+                    if (confidence > highestConfidence && faceRecognitionService.isMatchConfident(confidence)) {
+                        highestConfidence = confidence;
+                        bestMatch = worker;
+                    }
+                } catch (Exception e) {
+                    logger.warn("Error comparing face for worker: {}", worker.getEmployeeId(), e);
+                    // Continue to next worker
+                }
+            }
+
+            if (bestMatch != null) {
+                logger.info("Worker identified from face: {} (confidence: {})", bestMatch.getEmployeeId(), highestConfidence);
+                return Optional.of(bestMatch);
+            }
+
+            logger.warn("No matching worker found for provided face");
+            return Optional.empty();
+        } catch (Exception e) {
+            logger.error("Error identifying worker from face", e);
+            return Optional.empty();
+        }
     }
 }
