@@ -7,6 +7,7 @@ import CheckOut from './pages/CheckOut';
 import AttendanceReport from './pages/AttendanceReport';
 import WasteTasks from './pages/WasteTasks';
 import Workers from './pages/Workers';
+import RegisterWorker from './pages/RegisterWorker';
 
 function App() {
   return (
@@ -36,6 +37,9 @@ function App() {
               <li className="nav-item">
                 <Link to="/workers" className="nav-link">Workers</Link>
               </li>
+              <li className="nav-item">
+                <Link to="/register" className="nav-link">Register</Link>
+              </li>
             </ul>
           </div>
         </nav>
@@ -48,6 +52,7 @@ function App() {
             <Route path="/report" element={<AttendanceReport />} />
             <Route path="/tasks" element={<WasteTasks />} />
             <Route path="/workers" element={<Workers />} />
+            <Route path="/register" element={<RegisterWorker />} />
           </Routes>
         </main>
 

@@ -15,33 +15,33 @@ export default function Dashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const [attendanceRes, pendingRes, inProgressRes] = await Promise.all([
-          attendanceAPI.getTodayStatus(),
-          wasteAPI.getPendingTasks(),
-          wasteAPI.getInProgressTasks(),
-        ]);
-
-        setDashboardData({
-          presentEmployees: attendanceRes.data?.data?.present || 0,
-          absentEmployees: attendanceRes.data?.data?.absent || 0,
-          attendanceRate: attendanceRes.data?.data?.attendance_rate || '0.00%',
-          pendingTasks: pendingRes.data?.data?.tasks?.length || 0,
-          inProgressTasks: inProgressRes.data?.data?.tasks?.length || 0,
-          totalWorkers: attendanceRes.data?.data?.total_workers || 0,
-        });
-      } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [attendanceRes, pendingRes, inProgressRes] = await Promise.all([
+        attendanceAPI.getTodayStatus(),
+        wasteAPI.getPendingTasks(),
+        wasteAPI.getInProgressTasks(),
+      ]);
+
+      setDashboardData({
+        presentEmployees: attendanceRes.data?.data?.present || 0,
+        absentEmployees: attendanceRes.data?.data?.absent || 0,
+        attendanceRate: attendanceRes.data?.data?.attendance_rate || '0.00%',
+        pendingTasks: pendingRes.data?.data?.tasks?.length || 0,
+        inProgressTasks: inProgressRes.data?.data?.tasks?.length || 0,
+        totalWorkers: attendanceRes.data?.data?.total_workers || 0,
+      });
+    } catch (err) {
+      setError('Failed to load dashboard data');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) return <div className="loading">Loading dashboard...</div>;
 

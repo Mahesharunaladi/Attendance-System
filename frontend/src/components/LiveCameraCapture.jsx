@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { attendanceAPI } from '../services/api';
 
-export default function LiveCameraCapture({ imageFile, onCapture, onWorkerDetected }) {
+export default function LiveCameraCapture({
+  imageFile,
+  onCapture,
+  onWorkerDetected,
+  mode = 'identify',
+}) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -16,6 +21,7 @@ export default function LiveCameraCapture({ imageFile, onCapture, onWorkerDetect
   const [detectionStatus, setDetectionStatus] = useState('');
   const [detectedWorker, setDetectedWorker] = useState(null);
   const [isDetecting, setIsDetecting] = useState(false);
+  const isRegistrationMode = mode === 'register';
 
   const updatePreview = useCallback((nextUrl) => {
     if (previewUrlRef.current) {
@@ -66,13 +72,17 @@ export default function LiveCameraCapture({ imageFile, onCapture, onWorkerDetect
       }
 
       setIsCameraReady(true);
-      setDetectionStatus('Camera ready - loading models...');
-      
-      // Wait a bit for video to stabilize, then mark detection as active.
-      setTimeout(() => {
-        setIsDetecting(true);
-        setDetectionStatus('Detecting face... Please blink to capture');
-      }, 500);
+      if (isRegistrationMode) {
+        setDetectionStatus('Camera ready. Capture the worker photo to continue registration.');
+      } else {
+        setDetectionStatus('Camera ready - loading models...');
+        
+        // Wait a bit for video to stabilize, then mark detection as active.
+        setTimeout(() => {
+          setIsDetecting(true);
+          setDetectionStatus('Detecting face... Please blink to capture');
+        }, 500);
+      }
     } catch (error) {
       setCameraError(
         error.name === 'NotAllowedError'
@@ -80,7 +90,7 @@ export default function LiveCameraCapture({ imageFile, onCapture, onWorkerDetect
           : 'Unable to access the camera right now.'
       );
     }
-  }, [stopCamera]);
+  }, [isRegistrationMode, stopCamera]);
 
   const captureFrame = useCallback(() => {
     if (!videoRef.current || !canvasRef.current || !isCameraReady) {
@@ -197,10 +207,10 @@ export default function LiveCameraCapture({ imageFile, onCapture, onWorkerDetect
   }, [captureFrame, detectFaceAndIdentifyWorker, isDetecting]);
 
   useEffect(() => {
-    if (isDetecting) {
+    if (isDetecting && !isRegistrationMode) {
       startFaceDetection();
     }
-  }, [isDetecting, startFaceDetection]);
+  }, [isDetecting, isRegistrationMode, startFaceDetection]);
 
   useEffect(() => {
     startCamera();
@@ -327,9 +337,11 @@ export default function LiveCameraCapture({ imageFile, onCapture, onWorkerDetect
             type="button"
             className="secondary-btn"
             onClick={handleCapture}
-            disabled={!isCameraReady || isDetecting}
+            disabled={!isCameraReady || (!isRegistrationMode && isDetecting)}
           >
-            {isDetecting ? 'Auto-detecting... Blink to capture' : isCameraReady ? 'Capture Photo Manually' : 'Starting Camera...'}
+            {isRegistrationMode
+              ? (isCameraReady ? 'Capture Registration Photo' : 'Starting Camera...')
+              : (isDetecting ? 'Auto-detecting... Blink to capture' : isCameraReady ? 'Capture Photo Manually' : 'Starting Camera...')}
           </button>
         )}
       </div>

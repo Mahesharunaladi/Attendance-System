@@ -8,6 +8,136 @@
   font-size: 2rem;
 }
 
+.dashboard-registration {
+  margin-bottom: 2.5rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.dashboard-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #e8f2ff;
+  color: #1254a1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.registration-copy h2 {
+  margin: 0 0 0.5rem;
+  color: #17324d;
+  font-size: 1.7rem;
+}
+
+.registration-copy p {
+  margin: 0;
+  color: #5b6f82;
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+.registration-card {
+  display: grid;
+  grid-template-columns: minmax(300px, 420px) minmax(320px, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #ffffff, #f5f9ff);
+  border: 1px solid #d7e5f5;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(27, 68, 117, 0.08);
+}
+
+.registration-shortcut {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem 1.35rem;
+  background: white;
+  border: 1px solid #d7e5f5;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(27, 68, 117, 0.07);
+}
+
+.registration-shortcut p {
+  margin: 0;
+  color: #425a70;
+}
+
+.registration-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.8rem 1.15rem;
+  background: #1f6fd1;
+  color: white;
+  text-decoration: none;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.registration-link:hover {
+  background: #1558aa;
+  transform: translateY(-1px);
+}
+
+.registration-note {
+  color: #6d8092;
+  font-size: 0.9rem;
+}
+
+.registration-camera label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #23415f;
+  font-weight: 600;
+}
+
+.registration-fields {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.registration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.registration-grid .form-group {
+  margin-bottom: 0;
+}
+
+.registration-grid select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+  box-sizing: border-box;
+}
+
+.registration-grid select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.error-message {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  background: #fdecec;
+  color: #992d2d;
+  border: 1px solid #f3c0c0;
+  border-radius: 10px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -84,6 +214,19 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .registration-card {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .registration-grid {
+    grid-template-columns: 1fr;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }

@@ -70,6 +70,17 @@ public class WorkerRepository {
         }
     }
 
+    public Optional<Worker> findByAadharNumber(String aadharNumber) {
+        Session session = sessionFactory.openSession();
+        try {
+            Query<Worker> query = session.createQuery("FROM Worker WHERE aadharNumber = :aadharNumber", Worker.class);
+            query.setParameter("aadharNumber", aadharNumber);
+            return query.uniqueResultOptional();
+        } finally {
+            session.close();
+        }
+    }
+
     /**
      * Get all active workers
      *

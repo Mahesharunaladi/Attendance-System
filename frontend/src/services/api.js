@@ -59,7 +59,9 @@ export const attendanceAPI = {
 
 // Workers API endpoints
 export const workersAPI = {
-  registerWorker: (data) => apiClient.post('/workers/register', data),
+  registerWorker: (formData) => apiClient.post('/workers/register', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   getAllWorkers: () => apiClient.get('/workers'),
   getWorker: (workerId) => apiClient.get(`/workers/${workerId}`),
   getWorkersByRole: (role) => apiClient.get(`/workers/role/${role}`),
