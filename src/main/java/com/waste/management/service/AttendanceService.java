@@ -154,6 +154,16 @@ public class AttendanceService {
     }
 
     /**
+     * Get today's attendance record for a worker
+     *
+     * @param worker The worker to check
+     * @return Optional containing today's attendance record if present
+     */
+    public Optional<AttendanceRecord> getTodayAttendanceForWorker(Worker worker) {
+        return attendanceRepository.findTodayCheckInByWorker(worker.getId(), LocalDate.now());
+    }
+
+    /**
      * Get today's attendance count
      *
      * @return Number of workers present today

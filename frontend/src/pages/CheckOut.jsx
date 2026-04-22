@@ -45,10 +45,10 @@ export default function CheckOut() {
     fetchTodayStatus();
   }, []);
 
-  const fetchTodayStatus = async () => {
+  const fetchTodayStatus = async (empId = '') => {
     try {
-      const response = await attendanceAPI.getTodayStatus();
-      setTodayStatus(response?.data);
+      const response = await attendanceAPI.getTodayStatus(empId || formData.employeeId);
+      setTodayStatus(response?.data?.data);
     } catch (error) {
       console.error('Error fetching today status:', error);
     }

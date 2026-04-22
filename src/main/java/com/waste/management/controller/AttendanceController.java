@@ -1,5 +1,6 @@
 package com.waste.management.controller;
 
+import com.waste.management.entity.AttendanceRecord;
 import com.waste.management.entity.Worker;
 import com.waste.management.repository.WorkerRepository;
 import com.waste.management.service.AttendanceService;
@@ -137,28 +138,63 @@ public class AttendanceController {
     }
 
     /**
-     * GET /api/attendance/status
-     * Get today's attendance statistics
+     * GET /api/attendance/today
+     * Get today's attendance statistics or specific worker's status
      */
     @GetMapping("/today")
-    public Map<String, Object> getTodayAttendanceStatus() {
+    public Map<String, Object> getTodayAttendanceStatus(
+            @RequestParam(required = false) String employeeId) {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            List<Worker> allWorkers = workerRepository.findAllActive();
-            long presentCount = attendanceService.getTodayAttendanceCount();
-            long absentCount = attendanceService.getAbsenteeCount(allWorkers, LocalDate.now());
-            
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("total_workers", allWorkers.size());
-            stats.put("present", presentCount);
-            stats.put("absent", absentCount);
-            stats.put("attendance_rate", String.format("%.2f%%", 
-                    (presentCount * 100.0 / Math.max(allWorkers.size(), 1))));
-            
-            response.put("success", true);
-            response.put("data", stats);
-            response.put("code", 200);
+            if (employeeId != null && !employeeId.isEmpty()) {
+                // Get status for specific worker
+                Optional<Worker> worker = workerRepository.findByEmployeeId(employeeId);
+                if (worker.isEmpty()) {
+                    response.put("success", false);
+                    response.put("message", "Worker not found");
+                    response.put("code", 404);
+                    return response;
+                }
+                
+                Optional<AttendanceRecord> todayAttendance = attendanceService.getTodayAttendanceForWorker(worker.get());
+                
+                Map<String, Object> status = new HashMap<>();
+                if (todayAttendance.isPresent()) {
+                    AttendanceRecord record = todayAttendance.get();
+                    status.put("checkedIn", true);
+                    status.put("checkInTime", record.getCheckInTime());
+                    
+                    boolean hasCheckOut = record.getCheckOutTime() != null;
+                    status.put("checkedOut", hasCheckOut);
+                    if (hasCheckOut) {
+                        status.put("checkOutTime", record.getCheckOutTime());
+                    }
+                } else {
+                    status.put("checkedIn", false);
+                    status.put("checkedOut", false);
+                }
+                
+                response.put("success", true);
+                response.put("data", status);
+                response.put("code", 200);
+            } else {
+                // Get overall statistics
+                List<Worker> allWorkers = workerRepository.findAllActive();
+                long presentCount = attendanceService.getTodayAttendanceCount();
+                long absentCount = attendanceService.getAbsenteeCount(allWorkers, LocalDate.now());
+                
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("total_workers", allWorkers.size());
+                stats.put("present", presentCount);
+                stats.put("absent", absentCount);
+                stats.put("attendance_rate", String.format("%.2f%%", 
+                        (presentCount * 100.0 / Math.max(allWorkers.size(), 1))));
+                
+                response.put("success", true);
+                response.put("data", stats);
+                response.put("code", 200);
+            }
         } catch (Exception e) {
             logger.error("Error getting attendance status", e);
             response.put("success", false);
