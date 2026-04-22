@@ -32,7 +32,7 @@ public class FaceRecognitionService {
     private static final double HELPER_MATCH_THRESHOLD = 0.75;
     private static final double SUPERVISOR_MATCH_THRESHOLD = 0.78;
     private static final double MANAGER_MATCH_THRESHOLD = 0.78;
-    private static final double FALLBACK_MATCH_THRESHOLD = 0.84;
+    private static final double FALLBACK_MATCH_THRESHOLD = 0.78;  // Lowered from 0.84 for better detection without OpenCV
     
     private static final String HAAR_CASCADE_PATH = "haarcascade_frontalface_alt.xml";
 

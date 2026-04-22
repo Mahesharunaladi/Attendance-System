@@ -88,7 +88,7 @@ export default function LiveCameraCapture({
       if (isRegistrationMode) {
         setDetectionStatus('Camera ready. Capture the worker photo to continue registration.');
       } else {
-        setDetectionStatus('Camera ready - Detecting face...');
+        setDetectionStatus('📸 Preparing for face detection...');
         
         // Wait a bit for video to stabilize, then mark detection as active.
         detectionTimeoutRef.current = setTimeout(() => {
@@ -96,8 +96,8 @@ export default function LiveCameraCapture({
             return;
           }
           setIsDetecting(true);
-          setDetectionStatus('📸 Face detected! Auto-capturing in 3 seconds... or click "Capture Photo Manually"');
-        }, 500);
+          setDetectionStatus('�️ Face detection active - Auto-capturing in 2.5 seconds...');
+        }, 300);
       }
     } catch (error) {
       if (requestId !== cameraRequestRef.current) {
@@ -144,11 +144,15 @@ export default function LiveCameraCapture({
           try {
             // Call backend API to identify worker from face
             const response = await attendanceAPI.identifyWorkerFromFace(formData);
-            const worker = response?.data?.worker;
+            console.log('Face identification response:', response);
             
-            if (worker) {
+            // Check both data.worker and worker in response
+            const worker = response?.data?.worker || response?.worker;
+            
+            if (worker && worker.employeeId) {
               setDetectedWorker(worker);
-              setDetectionStatus(`Detected: ${worker.fullName}`);
+              setDetectionStatus(`✓ Recognized: ${worker.fullName}`);
+              console.log('Worker detected:', worker);
               
               // Call the parent callback with worker details
               if (onWorkerDetected) {
@@ -166,10 +170,30 @@ export default function LiveCameraCapture({
               setTimeout(() => {
                 stopCamera();
               }, 1500);
+            } else {
+              console.warn('No worker data in response:', response);
+              setDetectionStatus('Face detected but worker not identified. Try "Capture Photo Manually"');
+              
+              // Still capture the image even if worker not identified
+              const file = new File([blob], `face-capture-unidentified-${Date.now()}.jpg`, {
+                type: 'image/jpeg',
+              });
+              onCapture(file);
+              updatePreview(URL.createObjectURL(file));
+              stopCamera();
             }
           } catch (error) {
             console.error('Error identifying worker:', error);
-            setDetectionStatus('Face detected but could not identify worker');
+            
+            // Still capture the image even on error
+            const file = new File([blob], `face-capture-error-${Date.now()}.jpg`, {
+              type: 'image/jpeg',
+            });
+            onCapture(file);
+            updatePreview(URL.createObjectURL(file));
+            
+            setDetectionStatus(`Face captured but identification failed. ${error.response?.data?.message || 'Please try manual capture.'}`);
+            stopCamera();
           }
         },
         'image/jpeg',
@@ -177,6 +201,7 @@ export default function LiveCameraCapture({
       );
     } catch (error) {
       console.error('Error in face detection:', error);
+      setDetectionStatus('Error capturing face. Please try again.');
     }
   }, [onCapture, onWorkerDetected, stopCamera, updatePreview]);
 
@@ -185,22 +210,25 @@ export default function LiveCameraCapture({
       clearInterval(detectionIntervalRef.current);
     }
 
-    const QUICK_CAPTURE_TIMEOUT = 3000; // 3 seconds quick capture
-    const MAX_TIMEOUT = 10000; // 10 seconds max timeout
+    const QUICK_CAPTURE_TIMEOUT = 2500; // 2.5 seconds quick capture (reduced from 3s)
+    const MAX_TIMEOUT = 8000; // 8 seconds max timeout (reduced from 10s)
     const startTime = Date.now();
     let captureAttempted = false;
+    let updateCounter = 0;
 
     detectionIntervalRef.current = setInterval(() => {
       if (!videoRef.current || !isDetecting) return;
 
       const elapsedTime = Date.now() - startTime;
+      updateCounter++;
 
-      // Quick auto-capture after 3 seconds if no manual capture
+      // Quick auto-capture after 2.5 seconds if no manual capture
       if (elapsedTime > QUICK_CAPTURE_TIMEOUT && !captureAttempted) {
         captureAttempted = true;
+        console.log('Auto-capturing face after 2.5 seconds...');
         const canvas = captureFrame();
         if (canvas) {
-          setDetectionStatus('Quick capturing...');
+          setDetectionStatus('📸 Capturing face...');
           detectFaceAndIdentifyWorker(canvas);
           if (detectionIntervalRef.current) {
             clearInterval(detectionIntervalRef.current);
@@ -212,9 +240,10 @@ export default function LiveCameraCapture({
 
       // Force capture after max timeout
       if (elapsedTime > MAX_TIMEOUT) {
+        console.log('Force capturing face after 8 second timeout...');
         const canvas = captureFrame();
         if (canvas) {
-          setDetectionStatus('Auto-capturing (timeout)...');
+          setDetectionStatus('📸 Force capturing (timeout)...');
           detectFaceAndIdentifyWorker(canvas);
         }
         if (detectionIntervalRef.current) {
@@ -223,7 +252,13 @@ export default function LiveCameraCapture({
         }
         return;
       }
-    }, 500); // Simplified interval - just wait for timeout
+
+      // Update UI every ~500ms
+      if (updateCounter % 1 === 0 && elapsedTime < QUICK_CAPTURE_TIMEOUT) {
+        const remaining = Math.ceil((QUICK_CAPTURE_TIMEOUT - elapsedTime) / 1000);
+        setDetectionStatus(`📸 Auto-capturing in ${remaining} second${remaining !== 1 ? 's' : ''}...`);
+      }
+    }, 250); // More frequent interval for better tracking
   }, [captureFrame, detectFaceAndIdentifyWorker, isDetecting]);
 
   useEffect(() => {
@@ -267,14 +302,22 @@ export default function LiveCameraCapture({
           type: 'image/jpeg',
         });
 
-        onCapture(file);
-        updatePreview(URL.createObjectURL(file));
-        stopCamera();
+        console.log('Manual capture: attempting face identification');
+        
+        // For manual capture in identify mode, also try to identify the worker
+        if (!isRegistrationMode) {
+          detectFaceAndIdentifyWorker(canvas);
+        } else {
+          // For registration mode, just capture without identification
+          onCapture(file);
+          updatePreview(URL.createObjectURL(file));
+          stopCamera();
+        }
       },
       'image/jpeg',
       0.92
     );
-  }, [isCameraReady, onCapture, stopCamera, updatePreview]);
+  }, [isCameraReady, onCapture, stopCamera, updatePreview, isRegistrationMode, detectFaceAndIdentifyWorker]);
 
   const handleRetake = useCallback(() => {
     onCapture(null);
