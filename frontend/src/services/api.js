@@ -11,24 +11,42 @@ const apiClient = axios.create({
 
 // Attendance API endpoints
 export const attendanceAPI = {
-  checkIn: (employeeId, imagePath, latitude, longitude) => {
+  checkIn: (employeeId, imageFile, latitude, longitude) => {
     const formData = new FormData();
     formData.append('employeeId', employeeId);
-    formData.append('imagePath', imagePath);
-    formData.append('latitude', latitude);
-    formData.append('longitude', longitude);
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    if (latitude !== undefined && latitude !== null) {
+      formData.append('latitude', latitude);
+    }
+    if (longitude !== undefined && longitude !== null) {
+      formData.append('longitude', longitude);
+    }
     return apiClient.post('/attendance/checkin', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
 
-  checkOut: (employeeId, imagePath, latitude, longitude) => {
+  checkOut: (employeeId, imageFile, latitude, longitude) => {
     const formData = new FormData();
     formData.append('employeeId', employeeId);
-    formData.append('imagePath', imagePath);
-    formData.append('latitude', latitude);
-    formData.append('longitude', longitude);
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    if (latitude !== undefined && latitude !== null) {
+      formData.append('latitude', latitude);
+    }
+    if (longitude !== undefined && longitude !== null) {
+      formData.append('longitude', longitude);
+    }
     return apiClient.post('/attendance/checkout', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
+  identifyWorkerFromFace: (formData) => {
+    return apiClient.post('/attendance/identify-face', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },

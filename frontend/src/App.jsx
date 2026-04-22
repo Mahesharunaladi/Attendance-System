@@ -10,7 +10,7 @@ import Workers from './pages/Workers';
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="App">
         <nav className="navbar">
           <div className="nav-container">

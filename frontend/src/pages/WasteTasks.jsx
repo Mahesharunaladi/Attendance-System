@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { wasteAPI } from '../services/api';
 import '../styles/Tables.css';
 
@@ -8,11 +8,7 @@ export default function WasteTasks() {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all'); // all, pending, in-progress
 
-  useEffect(() => {
-    fetchTasks();
-  }, [filter]);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
     setError('');
 
@@ -20,20 +16,28 @@ export default function WasteTasks() {
       let response;
       if (filter === 'pending') {
         response = await wasteAPI.getPendingTasks();
+        setTasks(response.data?.data?.tasks || []);
       } else if (filter === 'in-progress') {
         response = await wasteAPI.getInProgressTasks();
+        setTasks(response.data?.data?.tasks || []);
       } else {
         response = await wasteAPI.getPendingTasks();
         const inProgressRes = await wasteAPI.getInProgressTasks();
-        response.data.data = [...response.data.data, ...inProgressRes.data.data];
+        setTasks([
+          ...(response.data?.data?.tasks || []),
+          ...(inProgressRes.data?.data?.tasks || []),
+        ]);
       }
-      setTasks(response.data.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch tasks');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   return (
     <div className="tasks-container">

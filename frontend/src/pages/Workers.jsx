@@ -17,7 +17,7 @@ export default function Workers() {
 
     try {
       const response = await workersAPI.getAllWorkers();
-      setWorkers(response.data.data || []);
+      setWorkers(response.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch workers');
     } finally {

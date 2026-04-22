@@ -24,7 +24,7 @@ export default function AttendanceReport() {
 
     try {
       const response = await attendanceAPI.getReport(dateRange.startDate, dateRange.endDate);
-      setReportData(response.data.data || []);
+      setReportData(response.data?.data?.records || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch report');
     } finally {

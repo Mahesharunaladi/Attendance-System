@@ -6,10 +6,10 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState({
     presentEmployees: 0,
     absentEmployees: 0,
-    attendanceRate: 0,
+    attendanceRate: '0.00%',
     pendingTasks: 0,
     inProgressTasks: 0,
-    totalWasteCollected: 0,
+    totalWorkers: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,12 +25,12 @@ export default function Dashboard() {
         ]);
 
         setDashboardData({
-          presentEmployees: attendanceRes.data.data.present || 0,
-          absentEmployees: attendanceRes.data.data.absent || 0,
-          attendanceRate: attendanceRes.data.data.attendance_rate || 0,
-          pendingTasks: pendingRes.data.data.length || 0,
-          inProgressTasks: inProgressRes.data.data.length || 0,
-          totalWasteCollected: attendanceRes.data.data.total_workers || 0,
+          presentEmployees: attendanceRes.data?.data?.present || 0,
+          absentEmployees: attendanceRes.data?.data?.absent || 0,
+          attendanceRate: attendanceRes.data?.data?.attendance_rate || '0.00%',
+          pendingTasks: pendingRes.data?.data?.tasks?.length || 0,
+          inProgressTasks: inProgressRes.data?.data?.tasks?.length || 0,
+          totalWorkers: attendanceRes.data?.data?.total_workers || 0,
         });
       } catch (err) {
         setError('Failed to load dashboard data');
@@ -72,7 +72,7 @@ export default function Dashboard() {
           <div className="stat-icon">📈</div>
           <div className="stat-content">
             <h3>Attendance Rate</h3>
-            <p className="stat-value">{(dashboardData.attendanceRate * 100).toFixed(2)}%</p>
+            <p className="stat-value">{dashboardData.attendanceRate}</p>
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export default function Dashboard() {
           <div className="stat-icon">♻️</div>
           <div className="stat-content">
             <h3>Total Workers</h3>
-            <p className="stat-value">{dashboardData.totalWasteCollected}</p>
+            <p className="stat-value">{dashboardData.totalWorkers}</p>
           </div>
         </div>
       </div>

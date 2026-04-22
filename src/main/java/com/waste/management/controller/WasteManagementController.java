@@ -6,6 +6,7 @@ import com.waste.management.repository.WorkerRepository;
 import com.waste.management.service.WasteManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,9 @@ import java.util.Optional;
 /**
  * REST Controller for Waste Management API endpoints
  */
+@RestController
+@RequestMapping("/api/waste-tasks")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class WasteManagementController {
     private static final Logger logger = LoggerFactory.getLogger(WasteManagementController.class);
     
@@ -31,6 +35,7 @@ public class WasteManagementController {
      * POST /api/waste-tasks/create
      * Create a new waste collection task
      */
+    @PostMapping("/create")
     public Map<String, Object> createTask(String area, String wasteType, Double estimatedWeight) {
         Map<String, Object> response = new HashMap<>();
         
@@ -63,7 +68,9 @@ public class WasteManagementController {
      * POST /api/waste-tasks/{taskId}/assign-worker
      * Assign worker to a waste task
      */
-    public Map<String, Object> assignWorkerToTask(Long taskId, Long workerId) {
+    @PostMapping("/{taskId}/assign-worker")
+    public Map<String, Object> assignWorkerToTask(@PathVariable Long taskId,
+                                                  @RequestParam Long workerId) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -100,7 +107,9 @@ public class WasteManagementController {
      * POST /api/waste-tasks/{taskId}/assign-driver
      * Assign driver to a waste task
      */
-    public Map<String, Object> assignDriverToTask(Long taskId, Long driverId) {
+    @PostMapping("/{taskId}/assign-driver")
+    public Map<String, Object> assignDriverToTask(@PathVariable Long taskId,
+                                                  @RequestParam Long driverId) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -137,8 +146,11 @@ public class WasteManagementController {
      * POST /api/waste-tasks/{taskId}/complete
      * Mark task as completed with weight and location
      */
-    public Map<String, Object> completeTask(Long taskId, Double actualWeight, 
-                                            Double latitude, Double longitude) {
+    @PostMapping("/{taskId}/complete")
+    public Map<String, Object> completeTask(@PathVariable Long taskId,
+                                            @RequestParam Double actualWeight, 
+                                            @RequestParam(required = false) Double latitude,
+                                            @RequestParam(required = false) Double longitude) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -169,6 +181,7 @@ public class WasteManagementController {
      * GET /api/waste-tasks/pending
      * Get all pending tasks
      */
+    @GetMapping("/pending")
     public Map<String, Object> getPendingTasks() {
         Map<String, Object> response = new HashMap<>();
         
@@ -196,6 +209,7 @@ public class WasteManagementController {
      * GET /api/waste-tasks/in-progress
      * Get all in-progress tasks
      */
+    @GetMapping("/in-progress")
     public Map<String, Object> getInProgressTasks() {
         Map<String, Object> response = new HashMap<>();
         
@@ -223,6 +237,7 @@ public class WasteManagementController {
      * GET /api/waste-tasks/statistics
      * Get waste collection statistics
      */
+    @GetMapping("/statistics")
     public Map<String, Object> getStatistics() {
         Map<String, Object> response = new HashMap<>();
         
@@ -254,7 +269,8 @@ public class WasteManagementController {
      * GET /api/waste-tasks/worker/{workerId}
      * Get tasks assigned to a specific worker
      */
-    public Map<String, Object> getWorkerTasks(Long workerId) {
+    @GetMapping("/worker/{workerId}")
+    public Map<String, Object> getWorkerTasks(@PathVariable Long workerId) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -291,7 +307,9 @@ public class WasteManagementController {
      * POST /api/waste-tasks/{taskId}/cancel
      * Cancel a waste task
      */
-    public Map<String, Object> cancelTask(Long taskId, String reason) {
+    @PostMapping("/{taskId}/cancel")
+    public Map<String, Object> cancelTask(@PathVariable Long taskId,
+                                          @RequestParam(required = false) String reason) {
         Map<String, Object> response = new HashMap<>();
         
         try {

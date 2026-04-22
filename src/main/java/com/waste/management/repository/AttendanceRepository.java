@@ -48,13 +48,16 @@ public class AttendanceRepository {
     public Optional<AttendanceRecord> findTodayCheckInByWorker(Long workerId, LocalDate date) {
         Session session = sessionFactory.openSession();
         try {
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
             Query<AttendanceRecord> query = session.createQuery(
                     "FROM AttendanceRecord WHERE worker.id = :workerId " +
-                    "AND CAST(checkInTime AS date) = :date",
+                    "AND checkInTime >= :startOfDay AND checkInTime < :endOfDay",
                     AttendanceRecord.class
             );
             query.setParameter("workerId", workerId);
-            query.setParameter("date", date);
+            query.setParameter("startOfDay", startOfDay);
+            query.setParameter("endOfDay", endOfDay);
             return query.uniqueResultOptional();
         } finally {
             session.close();
@@ -119,12 +122,15 @@ public class AttendanceRepository {
     public long countTodayCheckIns(LocalDate date) {
         Session session = sessionFactory.openSession();
         try {
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
             Query<Long> query = session.createQuery(
                     "SELECT COUNT(DISTINCT worker.id) FROM AttendanceRecord " +
-                    "WHERE CAST(checkInTime AS date) = :date",
+                    "WHERE checkInTime >= :startOfDay AND checkInTime < :endOfDay",
                     Long.class
             );
-            query.setParameter("date", date);
+            query.setParameter("startOfDay", startOfDay);
+            query.setParameter("endOfDay", endOfDay);
             Long result = query.uniqueResult();
             return result != null ? result : 0;
         } finally {

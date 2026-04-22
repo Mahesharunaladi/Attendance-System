@@ -5,7 +5,12 @@ import com.waste.management.repository.WorkerRepository;
 import com.waste.management.service.AttendanceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +20,9 @@ import java.util.Optional;
 /**
  * REST Controller for Attendance API endpoints
  */
+@RestController
+@RequestMapping("/api/attendance")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class AttendanceController {
     private static final Logger logger = LoggerFactory.getLogger(AttendanceController.class);
     
@@ -31,8 +39,13 @@ public class AttendanceController {
      * POST /api/attendance/checkin
      * Process check-in for a worker
      */
-    public Map<String, Object> processCheckIn(String employeeId, String imagePath, 
-                                               Double latitude, Double longitude) {
+    @PostMapping("/checkin")
+    public Map<String, Object> processCheckIn(
+            @RequestParam String employeeId,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(name = "image", required = false) MultipartFile image,
+            @RequestParam(name = "imageFile", required = false) MultipartFile imageFile) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -43,6 +56,12 @@ public class AttendanceController {
                 response.put("message", "Worker not found: " + employeeId);
                 response.put("code", 404);
                 return response;
+            }
+
+            String imagePath = null;
+            MultipartFile uploadedImage = resolveUploadedImage(image, imageFile);
+            if (uploadedImage != null && !uploadedImage.isEmpty()) {
+                imagePath = saveUploadedFile(uploadedImage);
             }
 
             Optional<?> result = attendanceService.recordCheckIn(worker.get(), imagePath, latitude, longitude);
@@ -71,8 +90,12 @@ public class AttendanceController {
      * POST /api/attendance/checkout
      * Process check-out for a worker
      */
-    public Map<String, Object> processCheckOut(String employeeId, String imagePath,
-                                                Double latitude, Double longitude) {
+    @PostMapping("/checkout")
+    public Map<String, Object> processCheckOut(@RequestParam String employeeId,
+                                               @RequestParam(required = false) Double latitude,
+                                               @RequestParam(required = false) Double longitude,
+                                               @RequestParam(name = "image", required = false) MultipartFile image,
+                                               @RequestParam(name = "imageFile", required = false) MultipartFile imageFile) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -83,6 +106,12 @@ public class AttendanceController {
                 response.put("message", "Worker not found: " + employeeId);
                 response.put("code", 404);
                 return response;
+            }
+
+            String imagePath = null;
+            MultipartFile uploadedImage = resolveUploadedImage(image, imageFile);
+            if (uploadedImage != null && !uploadedImage.isEmpty()) {
+                imagePath = saveUploadedFile(uploadedImage);
             }
 
             Optional<?> result = attendanceService.recordCheckOut(worker.get(), imagePath, latitude, longitude);
@@ -111,6 +140,7 @@ public class AttendanceController {
      * GET /api/attendance/status
      * Get today's attendance statistics
      */
+    @GetMapping("/today")
     public Map<String, Object> getTodayAttendanceStatus() {
         Map<String, Object> response = new HashMap<>();
         
@@ -143,7 +173,9 @@ public class AttendanceController {
      * GET /api/attendance/report
      * Get attendance report for date range
      */
-    public Map<String, Object> getAttendanceReport(String startDate, String endDate) {
+    @GetMapping("/report")
+    public Map<String, Object> getAttendanceReport(@RequestParam String startDate,
+                                                   @RequestParam String endDate) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -175,7 +207,10 @@ public class AttendanceController {
      * GET /api/attendance/worker/{workerId}
      * Get attendance report for specific worker
      */
-    public Map<String, Object> getWorkerAttendanceReport(Long workerId, String startDate, String endDate) {
+    @GetMapping("/report/{workerId}")
+    public Map<String, Object> getWorkerAttendanceReport(@PathVariable Long workerId,
+                                                         @RequestParam String startDate,
+                                                         @RequestParam String endDate) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -211,5 +246,86 @@ public class AttendanceController {
         }
         
         return response;
+    }
+
+    /**
+     * POST /api/attendance/identify-face
+     * Identify worker from captured face image
+     */
+    @PostMapping("/identify-face")
+    public Map<String, Object> identifyWorkerFromFace(
+            @RequestParam(name = "image", required = false) MultipartFile image,
+            @RequestParam(name = "imageFile", required = false) MultipartFile imageFile) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            MultipartFile uploadedImage = resolveUploadedImage(image, imageFile);
+            if (uploadedImage == null || uploadedImage.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Image file is required");
+                response.put("code", 400);
+                return response;
+            }
+
+            String imagePath = saveUploadedFile(uploadedImage);
+
+            // Call face recognition service to identify worker
+            Optional<Worker> identifiedWorker = attendanceService.identifyWorkerFromFace(imagePath);
+            
+            if (identifiedWorker.isPresent()) {
+                Worker worker = identifiedWorker.get();
+                
+                Map<String, Object> workerData = new HashMap<>();
+                workerData.put("id", worker.getId());
+                workerData.put("fullName", worker.getFullName());
+                workerData.put("employeeId", worker.getEmployeeId());
+                workerData.put("aadharNumber", worker.getAadharNumber());
+                workerData.put("phoneNumber", worker.getPhoneNumber());
+                workerData.put("gender", worker.getGender());
+                workerData.put("caste", worker.getCaste());
+                workerData.put("role", worker.getRole());
+                workerData.put("department", worker.getDepartment());
+                workerData.put("email", worker.getEmail());
+                
+                response.put("success", true);
+                response.put("message", "Worker identified successfully");
+                response.put("worker", workerData);
+                response.put("code", 200);
+            } else {
+                response.put("success", false);
+                response.put("message", "No matching worker found for the provided face");
+                response.put("code", 404);
+            }
+        } catch (Exception e) {
+            logger.error("Error identifying worker from face", e);
+            response.put("success", false);
+            response.put("message", "Error identifying worker: " + e.getMessage());
+            response.put("code", 500);
+        }
+        
+        return response;
+    }
+
+    private MultipartFile resolveUploadedImage(MultipartFile image, MultipartFile imageFile) {
+        if (image != null && !image.isEmpty()) {
+            return image;
+        }
+        return imageFile;
+    }
+
+    /**
+     * Save uploaded file to uploads directory
+     */
+    private String saveUploadedFile(MultipartFile file) throws IOException {
+        String uploadDir = "uploads";
+        Files.createDirectories(Paths.get(uploadDir));
+        
+        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        String filePath = uploadDir + "/" + fileName;
+        
+        Files.write(Paths.get(filePath), file.getBytes());
+        logger.info("File saved: {}", filePath);
+        
+        return filePath;
     }
 }
