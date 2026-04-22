@@ -16,6 +16,7 @@ export default function CheckIn() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const [detectedWorker, setDetectedWorker] = useState(null);
+  const [todayStatus, setTodayStatus] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -41,7 +42,18 @@ export default function CheckIn() {
 
   useEffect(() => {
     loadLocation().catch(() => {});
+    // Fetch today's attendance status on component mount
+    fetchTodayStatus();
   }, []);
+
+  const fetchTodayStatus = async () => {
+    try {
+      const response = await attendanceAPI.getTodayStatus();
+      setTodayStatus(response?.data);
+    } catch (error) {
+      console.error('Error fetching today status:', error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,11 +73,16 @@ export default function CheckIn() {
       setFormData({ employeeId: '', imageFile: null });
       setDetectedWorker(null);
       
-      // Reset button color and message after 3 seconds
+      // Fetch updated status
+      setTimeout(() => {
+        fetchTodayStatus();
+      }, 500);
+      
+      // Reset button color and message after 4 seconds
       setTimeout(() => {
         setMessageType('');
         setMessage('');
-      }, 3000);
+      }, 4000);
     } catch (error) {
       setMessageType('error');
       setMessage('✗ ' + (error.response?.data?.message || 'Check-in failed'));
@@ -85,6 +102,17 @@ export default function CheckIn() {
       <div className={`form-card ${detectedWorker ? 'form-card-wide' : ''}`}>
         <h2>Employee Check-In</h2>
         <p className="form-description">Use face recognition to check in</p>
+
+        {todayStatus && (
+          <div className={`status-badge ${todayStatus.checkedIn ? 'status-checked-in' : 'status-not-checked'}`}>
+            <span className="status-icon">{todayStatus.checkedIn ? '✓' : '○'}</span>
+            <span className="status-text">
+              {todayStatus.checkedIn 
+                ? `✓ Checked In at ${new Date(todayStatus.checkInTime).toLocaleTimeString()}` 
+                : 'Not Checked In Today'}
+            </span>
+          </div>
+        )}
 
         <div className={`checkin-capture-grid ${detectedWorker ? 'has-details' : ''}`}>
           <form onSubmit={handleSubmit}>

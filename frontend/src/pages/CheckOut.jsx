@@ -15,6 +15,7 @@ export default function CheckOut() {
   const [locationError, setLocationError] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const [todayStatus, setTodayStatus] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -40,7 +41,18 @@ export default function CheckOut() {
 
   useEffect(() => {
     loadLocation().catch(() => {});
+    // Fetch today's attendance status on component mount
+    fetchTodayStatus();
   }, []);
+
+  const fetchTodayStatus = async () => {
+    try {
+      const response = await attendanceAPI.getTodayStatus();
+      setTodayStatus(response?.data);
+    } catch (error) {
+      console.error('Error fetching today status:', error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

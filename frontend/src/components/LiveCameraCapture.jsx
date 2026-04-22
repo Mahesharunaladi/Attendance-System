@@ -90,7 +90,7 @@ export default function LiveCameraCapture({
       if (isRegistrationMode) {
         setDetectionStatus('Camera ready. Capture the worker photo to continue registration.');
       } else {
-        setDetectionStatus('Camera ready - loading models...');
+        setDetectionStatus('Camera ready - Detecting face...');
         
         // Wait a bit for video to stabilize, then mark detection as active.
         detectionTimeoutRef.current = setTimeout(() => {
@@ -98,7 +98,7 @@ export default function LiveCameraCapture({
             return;
           }
           setIsDetecting(true);
-          setDetectionStatus('Detecting face... Please blink to capture');
+          setDetectionStatus('📸 Face detected! Auto-capturing in 3 seconds... or click "Capture Photo Manually"');
         }, 500);
       }
     } catch (error) {
@@ -187,62 +187,45 @@ export default function LiveCameraCapture({
       clearInterval(detectionIntervalRef.current);
     }
 
-    let frameCount = 0;
-    let blinkSequence = [];
-    const BLINK_THRESHOLD = 40;
-    const MIN_FRAMES_FOR_BLINK = 3;
+    const QUICK_CAPTURE_TIMEOUT = 3000; // 3 seconds quick capture
+    const MAX_TIMEOUT = 10000; // 10 seconds max timeout
+    const startTime = Date.now();
+    let captureAttempted = false;
 
     detectionIntervalRef.current = setInterval(() => {
       if (!videoRef.current || !isDetecting) return;
 
-      frameCount++;
+      const elapsedTime = Date.now() - startTime;
 
-      // Capture frame every 2 frames for better responsiveness
-      if (frameCount % 2 === 0) {
+      // Quick auto-capture after 3 seconds if no manual capture
+      if (elapsedTime > QUICK_CAPTURE_TIMEOUT && !captureAttempted) {
+        captureAttempted = true;
         const canvas = captureFrame();
-        if (!canvas) return;
-
-        try {
-          const context = canvas.getContext('2d');
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          const data = imageData.data;
-
-          // Calculate average brightness across the entire frame
-          let brightness = 0;
-          let pixelCount = 0;
-          for (let i = 0; i < data.length; i += 4) {
-            brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
-            pixelCount++;
+        if (canvas) {
+          setDetectionStatus('Quick capturing...');
+          detectFaceAndIdentifyWorker(canvas);
+          if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+            detectionIntervalRef.current = null;
           }
-          brightness = brightness / pixelCount;
-
-          // Track brightness changes over time
-          blinkSequence.push(brightness);
-          if (blinkSequence.length > 20) {
-            blinkSequence.shift();
-          }
-
-          // Look for pattern: brightness dip (eyes closing) followed by recovery
-          if (blinkSequence.length >= MIN_FRAMES_FOR_BLINK) {
-            const recentBrightness = blinkSequence.slice(-MIN_FRAMES_FOR_BLINK);
-            const maxBright = Math.max(...recentBrightness);
-            const minBright = Math.min(...recentBrightness);
-            const brightnessDiff = maxBright - minBright;
-
-            // If we see a significant brightness variation, it's likely a blink
-            if (brightnessDiff > BLINK_THRESHOLD && Date.now() - lastBlinkTimeRef.current > blinkThresholdRef.current) {
-              lastBlinkTimeRef.current = Date.now();
-              setDetectionStatus('Blink detected! Capturing...');
-              
-              // Capture the current frame for face recognition
-              detectFaceAndIdentifyWorker(canvas);
-            }
-          }
-        } catch (error) {
-          console.error('Error in face detection frame processing:', error);
         }
+        return;
       }
-    }, 50); // Check every 50ms for better responsiveness
+
+      // Force capture after max timeout
+      if (elapsedTime > MAX_TIMEOUT) {
+        const canvas = captureFrame();
+        if (canvas) {
+          setDetectionStatus('Auto-capturing (timeout)...');
+          detectFaceAndIdentifyWorker(canvas);
+        }
+        if (detectionIntervalRef.current) {
+          clearInterval(detectionIntervalRef.current);
+          detectionIntervalRef.current = null;
+        }
+        return;
+      }
+    }, 500); // Simplified interval - just wait for timeout
   }, [captureFrame, detectFaceAndIdentifyWorker, isDetecting]);
 
   useEffect(() => {
@@ -377,11 +360,11 @@ export default function LiveCameraCapture({
             type="button"
             className="secondary-btn"
             onClick={handleCapture}
-            disabled={!isCameraReady || (!isRegistrationMode && isDetecting)}
+            disabled={!isCameraReady}
           >
             {isRegistrationMode
               ? (isCameraReady ? 'Capture Registration Photo' : 'Starting Camera...')
-              : (isDetecting ? 'Auto-detecting... Blink to capture' : isCameraReady ? 'Capture Photo Manually' : 'Starting Camera...')}
+              : (isCameraReady ? '📷 Capture Photo Manually' : 'Starting Camera...')}
           </button>
         )}
       </div>
@@ -389,7 +372,18 @@ export default function LiveCameraCapture({
       {imageFile && <p className="file-name">{imageFile.name}</p>}
       {cameraError && <p className="camera-error">{cameraError}</p>}
       {!imageFile && !cameraError && (
-        <p className="camera-help">Allow camera access, then capture a live image to continue.</p>
+        <>
+          <p className="camera-help">
+            {isRegistrationMode 
+              ? 'Allow camera access, then capture a photo to register.'
+              : '✓ Allow camera access\n✓ Face will be auto-captured in 3 seconds\n✓ Or click "Capture Photo Manually" to capture now'}
+          </p>
+          {isDetecting && !isRegistrationMode && (
+            <p className="camera-help" style={{ color: '#27ae60', fontWeight: '600' }}>
+              ⏳ Auto-detecting... Stand still (3-second auto-capture)
+            </p>
+          )}
+        </>
       )}
     </div>
   );
