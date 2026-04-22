@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const runtimeHostname =
+  typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || `http://${runtimeHostname}:8080/api`;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

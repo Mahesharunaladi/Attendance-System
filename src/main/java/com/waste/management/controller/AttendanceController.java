@@ -71,7 +71,7 @@ public class AttendanceController {
                 response.put("success", true);
                 response.put("message", "Check-in successful");
                 response.put("code", 200);
-                response.put("data", result.get());
+                response.put("data", buildAttendanceRecordResponse((AttendanceRecord) result.get()));
             } else {
                 response.put("success", false);
                 response.put("message", "Face verification failed");
@@ -121,7 +121,7 @@ public class AttendanceController {
                 response.put("success", true);
                 response.put("message", "Check-out successful");
                 response.put("code", 200);
-                response.put("data", result.get());
+                response.put("data", buildAttendanceRecordResponse((AttendanceRecord) result.get()));
             } else {
                 response.put("success", false);
                 response.put("message", "No active check-in found");
@@ -347,6 +347,19 @@ public class AttendanceController {
             return image;
         }
         return imageFile;
+    }
+
+    private Map<String, Object> buildAttendanceRecordResponse(AttendanceRecord record) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", record.getId());
+        data.put("checkInTime", record.getCheckInTime());
+        data.put("checkOutTime", record.getCheckOutTime());
+        data.put("status", record.getStatus() != null ? record.getStatus().name() : null);
+        data.put("faceMatchConfidence", record.getFaceMatchConfidence());
+        data.put("locationLatitude", record.getLocationLatitude());
+        data.put("locationLongitude", record.getLocationLongitude());
+        data.put("imageCapturedPath", record.getImageCapturedPath());
+        return data;
     }
 
     /**

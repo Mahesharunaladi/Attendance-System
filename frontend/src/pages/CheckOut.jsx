@@ -62,12 +62,17 @@ export default function CheckOut() {
 
     try {
       const coords = await loadLocation();
-      await attendanceAPI.checkOut(
+      const response = await attendanceAPI.checkOut(
         formData.employeeId,
         formData.imageFile,
         coords.latitude,
         coords.longitude
       );
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Check-out failed');
+      }
+
       setMessageType('success');
       setMessage('✓ Check-out successful!');
       setFormData({ employeeId: '', imageFile: null });
@@ -84,7 +89,7 @@ export default function CheckOut() {
       }, 4000);
     } catch (error) {
       setMessageType('error');
-      setMessage('✗ ' + (error.response?.data?.message || 'Check-out failed'));
+      setMessage('✗ ' + (error.response?.data?.message || error.message || 'Check-out failed'));
       
       // Reset error button after 4 seconds
       setTimeout(() => {

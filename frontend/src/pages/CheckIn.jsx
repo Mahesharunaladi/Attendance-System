@@ -63,12 +63,17 @@ export default function CheckIn() {
 
     try {
       const coords = await loadLocation();
-      await attendanceAPI.checkIn(
+      const response = await attendanceAPI.checkIn(
         formData.employeeId,
         formData.imageFile,
         coords.latitude,
         coords.longitude
       );
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.message || 'Check-in failed');
+      }
+
       setMessageType('success');
       setMessage('✓ Check-in successful!');
       setFormData({ employeeId: '', imageFile: null });
@@ -86,7 +91,7 @@ export default function CheckIn() {
       }, 4000);
     } catch (error) {
       setMessageType('error');
-      setMessage('✗ ' + (error.response?.data?.message || 'Check-in failed'));
+      setMessage('✗ ' + (error.response?.data?.message || error.message || 'Check-in failed'));
       
       // Reset error button after 4 seconds
       setTimeout(() => {

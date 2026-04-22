@@ -21,23 +21,43 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [attendanceRes, pendingRes, inProgressRes] = await Promise.all([
-        attendanceAPI.getTodayStatus(),
+      setError('');
+
+      // First verify backend connectivity to avoid multiple noisy failures.
+      const attendanceRes = await attendanceAPI.getTodayStatus();
+
+      const [pendingResult, inProgressResult] = await Promise.allSettled([
         wasteAPI.getPendingTasks(),
         wasteAPI.getInProgressTasks(),
       ]);
+
+      const pendingTasks =
+        pendingResult.status === 'fulfilled'
+          ? pendingResult.value?.data?.data?.tasks?.length || 0
+          : 0;
+
+      const inProgressTasks =
+        inProgressResult.status === 'fulfilled'
+          ? inProgressResult.value?.data?.data?.tasks?.length || 0
+          : 0;
+
+      const partialDataFailed =
+        pendingResult.status === 'rejected' || inProgressResult.status === 'rejected';
 
       setDashboardData({
         presentEmployees: attendanceRes.data?.data?.present || 0,
         absentEmployees: attendanceRes.data?.data?.absent || 0,
         attendanceRate: attendanceRes.data?.data?.attendance_rate || '0.00%',
-        pendingTasks: pendingRes.data?.data?.tasks?.length || 0,
-        inProgressTasks: inProgressRes.data?.data?.tasks?.length || 0,
+        pendingTasks,
+        inProgressTasks,
         totalWorkers: attendanceRes.data?.data?.total_workers || 0,
       });
+
+      if (partialDataFailed) {
+        setError('Some dashboard sections could not be loaded.');
+      }
     } catch (err) {
-      setError('Failed to load dashboard data');
-      console.error(err);
+      setError('Cannot connect to backend server. Start backend on http://localhost:8080.');
     } finally {
       setLoading(false);
     }
