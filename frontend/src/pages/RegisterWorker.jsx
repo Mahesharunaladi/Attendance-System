@@ -40,11 +40,14 @@ export default function RegisterWorker() {
         formData.append('image', registration.imageFile);
       }
 
+      console.log('Submitting registration form...');
       const response = await workersAPI.registerWorker(formData);
+      console.log('Registration response:', response);
+      
       const saved = response.data?.data || {};
 
       setMessageType('success');
-      setMessage(`Worker registered successfully. Employee ID: ${saved.employee_id || 'Generated automatically'}`);
+      setMessage(`✓ Worker registered successfully! Employee ID: ${saved.employee_id || 'Generated automatically'}`);
       setRegistration({
         fullName: '',
         phoneNumber: '',
@@ -53,9 +56,29 @@ export default function RegisterWorker() {
         role: 'CLEANER',
         imageFile: null,
       });
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 5000);
     } catch (error) {
+      console.error('Registration error:', error);
       setMessageType('error');
-      setMessage(error.response?.data?.message || 'Failed to register worker');
+      
+      // Extract error message from various possible locations
+      const errorMsg = error.response?.data?.message || 
+                      error.response?.data?.error ||
+                      error.message ||
+                      'Failed to register worker';
+      
+      setMessage(`✗ ${errorMsg}`);
+      
+      // Log details for debugging
+      if (error.response?.status) {
+        console.error('Status:', error.response.status);
+        console.error('Data:', error.response.data);
+      }
     } finally {
       setRegistering(false);
     }
