@@ -71,11 +71,16 @@ export default function CheckOut() {
       setMessage('✓ Check-out successful!');
       setFormData({ employeeId: '', imageFile: null });
       
-      // Reset button color and message after 3 seconds
+      // Fetch updated status
+      setTimeout(() => {
+        fetchTodayStatus();
+      }, 500);
+      
+      // Reset button color and message after 4 seconds
       setTimeout(() => {
         setMessageType('');
         setMessage('');
-      }, 3000);
+      }, 4000);
     } catch (error) {
       setMessageType('error');
       setMessage('✗ ' + (error.response?.data?.message || 'Check-out failed'));
@@ -95,6 +100,19 @@ export default function CheckOut() {
       <div className="form-card">
         <h2>Employee Check-Out</h2>
         <p className="form-description">Use face recognition to check out</p>
+
+        {todayStatus && (
+          <div className={`status-badge ${todayStatus.checkedIn && !todayStatus.checkedOut ? 'status-checked-in' : 'status-checked-out'}`}>
+            <span className="status-icon">{todayStatus.checkedOut ? '✓' : (todayStatus.checkedIn ? '➜' : '○')}</span>
+            <span className="status-text">
+              {todayStatus.checkedOut 
+                ? `✓ Checked Out at ${new Date(todayStatus.checkOutTime).toLocaleTimeString()}` 
+                : todayStatus.checkedIn
+                  ? `Checked In at ${new Date(todayStatus.checkInTime).toLocaleTimeString()}`
+                  : 'Not Checked In Today'}
+            </span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

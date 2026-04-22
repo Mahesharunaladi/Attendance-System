@@ -51,7 +51,12 @@ export const attendanceAPI = {
     });
   },
 
-  getTodayStatus: () => apiClient.get('/attendance/today'),
+  getTodayStatus: (employeeId = '') => {
+    if (employeeId) {
+      return apiClient.get(`/attendance/today?employeeId=${employeeId}`);
+    }
+    return apiClient.get('/attendance/today');
+  },
   getReport: (startDate, endDate) => apiClient.get('/attendance/report', { params: { startDate, endDate } }),
   getWorkerReport: (workerId, startDate, endDate) => 
     apiClient.get(`/attendance/report/${workerId}`, { params: { startDate, endDate } }),

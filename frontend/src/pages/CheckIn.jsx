@@ -46,10 +46,10 @@ export default function CheckIn() {
     fetchTodayStatus();
   }, []);
 
-  const fetchTodayStatus = async () => {
+  const fetchTodayStatus = async (empId = '') => {
     try {
-      const response = await attendanceAPI.getTodayStatus();
-      setTodayStatus(response?.data);
+      const response = await attendanceAPI.getTodayStatus(empId || formData.employeeId);
+      setTodayStatus(response?.data?.data);
     } catch (error) {
       console.error('Error fetching today status:', error);
     }
@@ -143,6 +143,10 @@ export default function CheckIn() {
                     ...prev,
                     employeeId: worker.employeeId || '',
                   }));
+                  // Fetch status for this worker
+                  setTimeout(() => {
+                    fetchTodayStatus(worker.employeeId);
+                  }, 300);
                 }}
               />
             </div>
