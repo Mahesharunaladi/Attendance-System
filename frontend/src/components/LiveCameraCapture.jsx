@@ -6,6 +6,7 @@ export default function LiveCameraCapture({
   onCapture,
   onWorkerDetected,
   mode = 'identify',
+  showDetectedWorkerDetails = true,
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -287,7 +288,7 @@ export default function LiveCameraCapture({
         </div>
       )}
 
-      {detectedWorker && (
+      {detectedWorker && showDetectedWorkerDetails && (
         <div className="worker-details">
           <h3>Worker Identified</h3>
           <div className="details-grid">

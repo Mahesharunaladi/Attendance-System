@@ -15,6 +15,7 @@ export default function CheckIn() {
   const [locationError, setLocationError] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const [detectedWorker, setDetectedWorker] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -58,6 +59,7 @@ export default function CheckIn() {
       setMessageType('success');
       setMessage('✓ Check-in successful!');
       setFormData({ employeeId: '', imageFile: null });
+      setDetectedWorker(null);
     } catch (error) {
       setMessageType('error');
       setMessage('✗ ' + (error.response?.data?.message || 'Check-in failed'));
@@ -68,62 +70,104 @@ export default function CheckIn() {
 
   return (
     <div className="form-container">
-      <div className="form-card">
+      <div className={`form-card ${detectedWorker ? 'form-card-wide' : ''}`}>
         <h2>Employee Check-In</h2>
         <p className="form-description">Use face recognition to check in</p>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="employeeId">Employee ID *</label>
-            <input
-              id="employeeId"
-              type="text"
-              name="employeeId"
-              value={formData.employeeId}
-              onChange={handleInputChange}
-              placeholder="Enter your employee ID"
-              required
-            />
-          </div>
+        <div className={`checkin-capture-grid ${detectedWorker ? 'has-details' : ''}`}>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="employeeId">Employee ID *</label>
+              <input
+                id="employeeId"
+                type="text"
+                name="employeeId"
+                value={formData.employeeId}
+                onChange={handleInputChange}
+                placeholder="Recognized employee ID will appear here"
+                required
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="imageFile">Capture Image *</label>
-            <LiveCameraCapture
-              imageFile={formData.imageFile}
-              onCapture={(imageFile) =>
-                setFormData(prev => ({ ...prev, imageFile }))
-              }
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="imageFile">Capture Image *</label>
+              <LiveCameraCapture
+                imageFile={formData.imageFile}
+                showDetectedWorkerDetails={false}
+                onCapture={(imageFile) =>
+                  setFormData(prev => ({ ...prev, imageFile }))
+                }
+                onWorkerDetected={(worker) => {
+                  setDetectedWorker(worker);
+                  setFormData(prev => ({
+                    ...prev,
+                    employeeId: worker.employeeId || '',
+                  }));
+                }}
+              />
+            </div>
 
-          <div className="location-status">
-            <span className={location ? 'location-badge success' : 'location-badge pending'}>
-              {locating
-                ? 'Detecting current location...'
-                : location
-                  ? `Location captured automatically: ${location.latitude}, ${location.longitude}`
-                  : 'Location will be captured automatically'}
-            </span>
+            <div className="location-status">
+              <span className={location ? 'location-badge success' : 'location-badge pending'}>
+                {locating
+                  ? 'Detecting current location...'
+                  : location
+                    ? `Location captured automatically: ${location.latitude}, ${location.longitude}`
+                    : 'Location will be captured automatically'}
+              </span>
+              <button
+                type="button"
+                className="location-refresh-btn"
+                onClick={() => loadLocation().catch(() => {})}
+                disabled={locating || loading}
+              >
+                {locating ? 'Detecting...' : 'Refresh Location'}
+              </button>
+            </div>
+
+            {locationError && <p className="camera-error">{locationError}</p>}
+
             <button
-              type="button"
-              className="location-refresh-btn"
-              onClick={() => loadLocation().catch(() => {})}
-              disabled={locating || loading}
+              type="submit"
+              disabled={loading || locating || !formData.imageFile || !location || !formData.employeeId}
+              className="submit-btn"
             >
-              {locating ? 'Detecting...' : 'Refresh Location'}
+              {loading ? 'Processing...' : 'Check In'}
             </button>
-          </div>
+          </form>
 
-          {locationError && <p className="camera-error">{locationError}</p>}
-
-          <button
-            type="submit"
-            disabled={loading || locating || !formData.imageFile || !location}
-            className="submit-btn"
-          >
-            {loading ? 'Processing...' : 'Check In'}
-          </button>
-        </form>
+          {detectedWorker && (
+            <aside className="detected-worker-panel">
+              <h3>Recognized Worker</h3>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <label>Name:</label>
+                  <span>{detectedWorker.fullName}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Employee ID:</label>
+                  <span>{detectedWorker.employeeId}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Phone Number:</label>
+                  <span>{detectedWorker.phoneNumber || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Aadhar Number:</label>
+                  <span>{detectedWorker.aadharNumber || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Role:</label>
+                  <span>{detectedWorker.role || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Department:</label>
+                  <span>{detectedWorker.department || 'N/A'}</span>
+                </div>
+              </div>
+            </aside>
+          )}
+        </div>
 
         {message && (
           <div className={`message ${messageType}`}>

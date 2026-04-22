@@ -14,6 +14,10 @@
   max-width: 560px;
 }
 
+.form-card.form-card-wide {
+  max-width: 980px;
+}
+
 .form-card h2 {
   color: #2c3e50;
   margin-bottom: 0.5rem;
@@ -67,6 +71,16 @@
 
 .camera-section {
   width: 100%;
+}
+
+.checkin-capture-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.checkin-capture-grid.has-details {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  align-items: start;
 }
 
 .camera-frame {
@@ -279,6 +293,21 @@
   margin-bottom: 1rem;
 }
 
+.detected-worker-panel {
+  padding: 1.25rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.detected-worker-panel h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -309,6 +338,10 @@
 @media (max-width: 768px) {
   .form-card {
     padding: 1.5rem;
+  }
+
+  .checkin-capture-grid.has-details {
+    grid-template-columns: 1fr;
   }
 
   .details-grid {

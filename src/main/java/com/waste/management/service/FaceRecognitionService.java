@@ -9,6 +9,11 @@ import org.opencv.videoio.VideoCapture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.*;
 
 /**
@@ -27,6 +32,7 @@ public class FaceRecognitionService {
     private static final double HELPER_MATCH_THRESHOLD = 0.75;
     private static final double SUPERVISOR_MATCH_THRESHOLD = 0.78;
     private static final double MANAGER_MATCH_THRESHOLD = 0.78;
+    private static final double FALLBACK_MATCH_THRESHOLD = 0.84;
     
     private static final String HAAR_CASCADE_PATH = "haarcascade_frontalface_alt.xml";
 
@@ -174,8 +180,8 @@ public class FaceRecognitionService {
      */
     private double compareFacesFallback(String face1Path, String face2Path) {
         try {
-            java.io.File file1 = new java.io.File(face1Path);
-            java.io.File file2 = new java.io.File(face2Path);
+            File file1 = new File(face1Path);
+            File file2 = new File(face2Path);
             
             if (!file1.exists() || !file2.exists()) {
                 logger.warn("Face image files not found for comparison");
@@ -190,42 +196,75 @@ public class FaceRecognitionService {
             // Check if images are in the same file or have similar names
             if (path1Lower.equals(path2Lower)) {
                 logger.debug("Face paths match - high confidence");
-                return 0.95;
+                return 1.0;
             }
-            
-            // File-based hash comparison for fallback
-            long hash1 = computeFileHash(file1);
-            long hash2 = computeFileHash(file2);
-            
-            if (hash1 == hash2) {
-                logger.debug("Face file hashes match - high confidence");
-                return 0.92;
+
+            BufferedImage image1 = ImageIO.read(file1);
+            BufferedImage image2 = ImageIO.read(file2);
+            if (image1 == null || image2 == null) {
+                logger.warn("Unable to decode face images for fallback comparison");
+                return 0.0;
             }
-            
-            // For different files, use a moderate confidence
-            logger.debug("Face files differ - moderate confidence");
-            return 0.78; // Default moderate match
+
+            long averageHash1 = computeAverageHash(image1);
+            long averageHash2 = computeAverageHash(image2);
+            long differenceHash1 = computeDifferenceHash(image1);
+            long differenceHash2 = computeDifferenceHash(image2);
+
+            int averageDistance = Long.bitCount(averageHash1 ^ averageHash2);
+            int differenceDistance = Long.bitCount(differenceHash1 ^ differenceHash2);
+            double similarity = Math.max(0.0, 1.0 - ((averageDistance + differenceDistance) / 128.0));
+
+            logger.debug("Fallback face similarity: {}", similarity);
+            return similarity;
         } catch (Exception e) {
             logger.warn("Error in face comparison fallback", e);
             return 0.0;
         }
     }
     
-    /**
-     * Compute simple hash of file contents
-     */
-    private long computeFileHash(java.io.File file) throws java.io.IOException {
-        long hash = 0;
-        try (java.io.FileInputStream fis = new java.io.FileInputStream(file)) {
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                for (int i = 0; i < bytesRead; i++) {
-                    hash = 31 * hash + buffer[i];
+    private long computeAverageHash(BufferedImage image) {
+        BufferedImage resized = resizeAndGrayscale(image, 8, 8);
+        int[] pixels = resized.getRGB(0, 0, 8, 8, null, 0, 8);
+        long total = 0;
+        for (int pixel : pixels) {
+            total += pixel & 0xff;
+        }
+        int average = (int) (total / pixels.length);
+
+        long hash = 0L;
+        for (int pixel : pixels) {
+            hash <<= 1;
+            if ((pixel & 0xff) >= average) {
+                hash |= 1L;
+            }
+        }
+        return hash;
+    }
+
+    private long computeDifferenceHash(BufferedImage image) {
+        BufferedImage resized = resizeAndGrayscale(image, 9, 8);
+        long hash = 0L;
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                int left = resized.getRGB(x, y) & 0xff;
+                int right = resized.getRGB(x + 1, y) & 0xff;
+                hash <<= 1;
+                if (left > right) {
+                    hash |= 1L;
                 }
             }
         }
         return hash;
+    }
+
+    private BufferedImage resizeAndGrayscale(BufferedImage image, int width, int height) {
+        BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D graphics = resized.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        graphics.drawImage(image, 0, 0, width, height, null);
+        graphics.dispose();
+        return resized;
     }
 
     /**
@@ -328,6 +367,9 @@ public class FaceRecognitionService {
      * @return true if similarity meets threshold
      */
     public boolean isMatchConfident(double similarity) {
+        if (!openCvAvailable) {
+            return similarity >= FALLBACK_MATCH_THRESHOLD;
+        }
         return similarity >= MATCH_THRESHOLD;
     }
 
