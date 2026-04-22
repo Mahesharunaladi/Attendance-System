@@ -44,6 +44,7 @@ export default function CheckIn() {
     loadLocation().catch(() => {});
     // Fetch today's attendance status on component mount
     fetchTodayStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTodayStatus = async (empId = '') => {

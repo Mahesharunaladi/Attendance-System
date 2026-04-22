@@ -14,8 +14,6 @@ export default function LiveCameraCapture({
   const previewUrlRef = useRef(null);
   const detectionIntervalRef = useRef(null);
   const detectionTimeoutRef = useRef(null);
-  const lastBlinkTimeRef = useRef(0);
-  const blinkThresholdRef = useRef(500); // milliseconds
   const cameraRequestRef = useRef(0);
 
   const [cameraError, setCameraError] = useState('');

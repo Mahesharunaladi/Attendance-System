@@ -43,6 +43,7 @@ export default function CheckOut() {
     loadLocation().catch(() => {});
     // Fetch today's attendance status on component mount
     fetchTodayStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTodayStatus = async (empId = '') => {
@@ -102,14 +103,14 @@ export default function CheckOut() {
         <p className="form-description">Use face recognition to check out</p>
 
         {todayStatus && (
-          <div className={`status-badge ${todayStatus.checkedIn && !todayStatus.checkedOut ? 'status-checked-in' : 'status-checked-out'}`}>
+          <div className={`status-badge ${todayStatus.checkedIn && !todayStatus.checkedOut ? 'status-checked-in' : todayStatus.checkedOut ? 'status-checked-out' : 'status-not-checked'}`}>
             <span className="status-icon">{todayStatus.checkedOut ? '✓' : (todayStatus.checkedIn ? '➜' : '○')}</span>
             <span className="status-text">
               {todayStatus.checkedOut 
                 ? `✓ Checked Out at ${new Date(todayStatus.checkOutTime).toLocaleTimeString()}` 
                 : todayStatus.checkedIn
-                  ? `Checked In at ${new Date(todayStatus.checkInTime).toLocaleTimeString()}`
-                  : 'Not Checked In Today'}
+                  ? `✓ Checked In at ${new Date(todayStatus.checkInTime).toLocaleTimeString()}`
+                  : '⚠ Not Checked In Today'}
             </span>
           </div>
         )}
