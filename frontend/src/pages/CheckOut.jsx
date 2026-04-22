@@ -58,9 +58,21 @@ export default function CheckOut() {
       setMessageType('success');
       setMessage('✓ Check-out successful!');
       setFormData({ employeeId: '', imageFile: null });
+      
+      // Reset button color and message after 3 seconds
+      setTimeout(() => {
+        setMessageType('');
+        setMessage('');
+      }, 3000);
     } catch (error) {
       setMessageType('error');
       setMessage('✗ ' + (error.response?.data?.message || 'Check-out failed'));
+      
+      // Reset error button after 4 seconds
+      setTimeout(() => {
+        setMessageType('');
+        setMessage('');
+      }, 4000);
     } finally {
       setLoading(false);
     }
@@ -119,9 +131,9 @@ export default function CheckOut() {
           <button
             type="submit"
             disabled={loading || locating || !formData.imageFile || !location}
-            className="submit-btn"
+            className={`submit-btn ${messageType === 'success' ? 'btn-success' : messageType === 'error' ? 'btn-error' : ''}`}
           >
-            {loading ? 'Processing...' : 'Check Out'}
+            {loading ? 'Processing...' : messageType === 'success' ? '✓ Checked Out' : 'Check Out'}
           </button>
         </form>
 

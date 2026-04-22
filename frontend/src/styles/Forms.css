@@ -225,6 +225,24 @@
   cursor: not-allowed;
 }
 
+.submit-btn.btn-success {
+  background: #27ae60;
+  color: white;
+}
+
+.submit-btn.btn-success:hover:not(:disabled) {
+  background: #229954;
+}
+
+.submit-btn.btn-error {
+  background: #e74c3c;
+  color: white;
+}
+
+.submit-btn.btn-error:hover:not(:disabled) {
+  background: #c0392b;
+}
+
 .message {
   margin-top: 1.5rem;
   padding: 1rem;

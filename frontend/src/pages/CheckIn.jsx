@@ -60,9 +60,21 @@ export default function CheckIn() {
       setMessage('✓ Check-in successful!');
       setFormData({ employeeId: '', imageFile: null });
       setDetectedWorker(null);
+      
+      // Reset button color and message after 3 seconds
+      setTimeout(() => {
+        setMessageType('');
+        setMessage('');
+      }, 3000);
     } catch (error) {
       setMessageType('error');
       setMessage('✗ ' + (error.response?.data?.message || 'Check-in failed'));
+      
+      // Reset error button after 4 seconds
+      setTimeout(() => {
+        setMessageType('');
+        setMessage('');
+      }, 4000);
     } finally {
       setLoading(false);
     }
@@ -130,9 +142,9 @@ export default function CheckIn() {
             <button
               type="submit"
               disabled={loading || locating || !formData.imageFile || !location || !formData.employeeId}
-              className="submit-btn"
+              className={`submit-btn ${messageType === 'success' ? 'btn-success' : messageType === 'error' ? 'btn-error' : ''}`}
             >
-              {loading ? 'Processing...' : 'Check In'}
+              {loading ? 'Processing...' : messageType === 'success' ? '✓ Checked In' : 'Check In'}
             </button>
           </form>
 

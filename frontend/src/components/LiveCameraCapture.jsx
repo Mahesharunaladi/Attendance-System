@@ -13,8 +13,10 @@ export default function LiveCameraCapture({
   const streamRef = useRef(null);
   const previewUrlRef = useRef(null);
   const detectionIntervalRef = useRef(null);
+  const detectionTimeoutRef = useRef(null);
   const lastBlinkTimeRef = useRef(0);
   const blinkThresholdRef = useRef(500); // milliseconds
+  const cameraRequestRef = useRef(0);
 
   const [cameraError, setCameraError] = useState('');
   const [isCameraReady, setIsCameraReady] = useState(false);
@@ -40,12 +42,19 @@ export default function LiveCameraCapture({
     }
     if (detectionIntervalRef.current) {
       clearInterval(detectionIntervalRef.current);
+      detectionIntervalRef.current = null;
+    }
+    if (detectionTimeoutRef.current) {
+      clearTimeout(detectionTimeoutRef.current);
+      detectionTimeoutRef.current = null;
     }
     setIsCameraReady(false);
     setIsDetecting(false);
   }, []);
 
   const startCamera = useCallback(async () => {
+    const requestId = ++cameraRequestRef.current;
+
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError('Live camera capture is not supported in this browser.');
       return;
@@ -65,6 +74,11 @@ export default function LiveCameraCapture({
         audio: false,
       });
 
+      if (requestId !== cameraRequestRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       streamRef.current = stream;
 
       if (videoRef.current) {
@@ -79,16 +93,24 @@ export default function LiveCameraCapture({
         setDetectionStatus('Camera ready - loading models...');
         
         // Wait a bit for video to stabilize, then mark detection as active.
-        setTimeout(() => {
+        detectionTimeoutRef.current = setTimeout(() => {
+          if (requestId !== cameraRequestRef.current) {
+            return;
+          }
           setIsDetecting(true);
           setDetectionStatus('Detecting face... Please blink to capture');
         }, 500);
       }
     } catch (error) {
+      if (requestId !== cameraRequestRef.current) {
+        return;
+      }
       setCameraError(
         error.name === 'NotAllowedError'
           ? 'Camera access was denied. Please allow camera access and try again.'
-          : 'Unable to access the camera right now.'
+          : error.name === 'NotReadableError' || error.name === 'AbortError'
+            ? 'Camera is busy or was interrupted. Please close other camera tabs/apps and try again.'
+            : 'Unable to access the camera right now.'
       );
     }
   }, [isRegistrationMode, stopCamera]);
@@ -165,46 +187,62 @@ export default function LiveCameraCapture({
       clearInterval(detectionIntervalRef.current);
     }
 
-    // Simulate face detection with simple eye blink detection
-    // In a real implementation, you'd use a library like face-api.js or ml5.js
     let frameCount = 0;
-    let previousBrightness = 0;
+    let blinkSequence = [];
+    const BLINK_THRESHOLD = 40;
+    const MIN_FRAMES_FOR_BLINK = 3;
 
     detectionIntervalRef.current = setInterval(() => {
       if (!videoRef.current || !isDetecting) return;
 
       frameCount++;
 
-      // Capture frame every 5 frames (reduce processing overhead)
-      if (frameCount % 5 === 0) {
+      // Capture frame every 2 frames for better responsiveness
+      if (frameCount % 2 === 0) {
         const canvas = captureFrame();
         if (!canvas) return;
 
-        const context = canvas.getContext('2d');
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
+        try {
+          const context = canvas.getContext('2d');
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
 
-        // Calculate average brightness
-        let brightness = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+          // Calculate average brightness across the entire frame
+          let brightness = 0;
+          let pixelCount = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            pixelCount++;
+          }
+          brightness = brightness / pixelCount;
+
+          // Track brightness changes over time
+          blinkSequence.push(brightness);
+          if (blinkSequence.length > 20) {
+            blinkSequence.shift();
+          }
+
+          // Look for pattern: brightness dip (eyes closing) followed by recovery
+          if (blinkSequence.length >= MIN_FRAMES_FOR_BLINK) {
+            const recentBrightness = blinkSequence.slice(-MIN_FRAMES_FOR_BLINK);
+            const maxBright = Math.max(...recentBrightness);
+            const minBright = Math.min(...recentBrightness);
+            const brightnessDiff = maxBright - minBright;
+
+            // If we see a significant brightness variation, it's likely a blink
+            if (brightnessDiff > BLINK_THRESHOLD && Date.now() - lastBlinkTimeRef.current > blinkThresholdRef.current) {
+              lastBlinkTimeRef.current = Date.now();
+              setDetectionStatus('Blink detected! Capturing...');
+              
+              // Capture the current frame for face recognition
+              detectFaceAndIdentifyWorker(canvas);
+            }
+          }
+        } catch (error) {
+          console.error('Error in face detection frame processing:', error);
         }
-        brightness = brightness / (data.length / 4);
-
-        // Detect blink by sudden brightness change (eyes closing)
-        const brightnessDiff = Math.abs(brightness - previousBrightness);
-        
-        if (brightnessDiff > 30 && Date.now() - lastBlinkTimeRef.current > blinkThresholdRef.current) {
-          lastBlinkTimeRef.current = Date.now();
-          setDetectionStatus('Blink detected! Capturing...');
-          
-          // Capture the current frame
-          detectFaceAndIdentifyWorker(canvas);
-        }
-
-        previousBrightness = brightness;
       }
-    }, 100); // Check every 100ms
+    }, 50); // Check every 50ms for better responsiveness
   }, [captureFrame, detectFaceAndIdentifyWorker, isDetecting]);
 
   useEffect(() => {
@@ -216,6 +254,7 @@ export default function LiveCameraCapture({
   useEffect(() => {
     startCamera();
     return () => {
+      cameraRequestRef.current += 1;
       stopCamera();
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
