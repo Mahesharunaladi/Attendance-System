@@ -1,7 +1,4 @@
-#!/bin/bash
 
-# Attendance System - Backend Startup Script
-# This script will start the backend server with all necessary checks
 
 set -e
 
@@ -50,7 +47,7 @@ fi
 echo "Starting backend server..."
 echo "Port: http://localhost:$PORT"
 echo ""
-echo "Logs will be written to: $PROJECT_DIR/logs/waste-management.log"
+echo "Logs will be written to: $PROJECT_DIR/logs/attendance-system.log"
 echo ""
 
 # Start the application
