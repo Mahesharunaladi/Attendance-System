@@ -42,14 +42,7 @@ mysql -u root -p attendance_system < database_setup.sql
 cd backend
 ```
 
-2. Update database credentials in `src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/attendance_system
-spring.datasource.username=root
-spring.datasource.password=your_password
-```
-
-3. Also update `src/main/resources/hibernate.cfg.xml` with your credentials.
+2. Update database credentials in `src/main/resources/application.properties` and `src/main/resources/hibernate.cfg.xml` if needed.
 
 ### 3. Build and Run
 
@@ -76,7 +69,7 @@ The backend will start at `http://localhost:8080`
 backend/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/attendancesystem/
+│   │   ├── java/com/waste/management/
 │   │   │   ├── entity/          # JPA Entities
 │   │   │   ├── repository/      # Data Access Layer
 │   │   │   ├── service/         # Business Logic
@@ -87,6 +80,7 @@ backend/
 │   │   │   └── exception/       # Custom Exceptions
 │   │   └── resources/
 │   │       ├── application.properties
+│   │       ├── hibernate-h2.cfg.xml
 │   │       ├── hibernate.cfg.xml
 │   │       └── logback.xml
 │   └── test/

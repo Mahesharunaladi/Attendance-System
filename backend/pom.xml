@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.waste.management</groupId>
-    <artifactId>attendance-system-backend</artifactId>
+    <artifactId>attendance-system-face-recognition</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Attendance System - Backend</name>
-    <description>Backend API for waste management attendance system with face recognition</description>
+    <name>Attendance System - Face Recognition</name>
+    <description>Automated attendance system for waste management workers using face recognition</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -21,17 +21,22 @@
 
     <repositories>
         <repository>
-            <id>opencv-releases</id>
-            <url>https://github.com/opencv/opencv/wiki/Extra-modules</url>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
         </repository>
     </repositories>
 
     <dependencies>
-        <!-- Face Recognition: OpenCV - Add manually to lib/ folder -->
-        <!-- Download from: https://opencv.org/releases/ -->
-        <!-- Or use: mvn install:install-file -Dfile=opencv-java450.jar -DgroupId=org.opencv -DartifactId=opencv -Dversion=4.5.0 -Dpackaging=jar -->
+        <!-- Face Recognition: OpenCV -->
+        <!-- Database: H2 (embedded for development/testing) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.1.214</version>
+        </dependency>
 
-        <!-- Database -->
+        <!-- Database: MySQL -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -79,6 +84,33 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- JavaFX for GUI -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21</version>
+        </dependency>
+
+        <!-- Deep Learning: DL4J for ML models -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-core</artifactId>
+            <version>1.0.0-M2</version>
+        </dependency>
+
+        <!-- OpenCV Core - To be installed separately as native library -->
+        <!-- See SETUP_GUIDE.md for OpenCV installation instructions -->
+        <!-- <dependency>
+            <groupId>org.opencv</groupId>
+            <artifactId>opencv-java</artifactId>
+            <version>4.8.0</version>
+        </dependency> -->
+
         <!-- REST API -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -99,14 +131,16 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.waste.management.AttendanceSystemApplication</mainClass>
+                </configuration>
                 <executions>
                     <execution>
-                        <phase>package</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>repackage</goal>
                         </goals>
                     </execution>
                 </executions>

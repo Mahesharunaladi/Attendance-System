@@ -79,12 +79,12 @@ echo [INFO] Setting up database...
 where mysql >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo [WARNING] MySQL not found. Please run SQL setup manually:
-    echo mysql -u root -p ^< %PROJECT_DIR%sql\database_setup.sql
+    echo mysql -u root -p ^< %PROJECT_DIR%..\sql\database_setup.sql
     goto end
 )
 
 echo Please enter MySQL root password when prompted:
-mysql -u root -p < "%PROJECT_DIR%sql\database_setup.sql"
+mysql -u root -p < "%PROJECT_DIR%..\sql\database_setup.sql"
 echo [SUCCESS] Database setup completed
 goto end
 

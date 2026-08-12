@@ -1,7 +1,7 @@
 # Multi-stage Docker build for Waste Management Attendance System
 
 # Stage 1: Build stage
-FROM maven:3.8.1-openjdk-11 AS builder
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
@@ -16,7 +16,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime stage
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the built JAR from builder
-COPY --from=builder /build/target/attendance-system-face-recognition-1.0.0.jar app.jar
+COPY --from=builder /build/target/*.jar app.jar
 
 # Create necessary directories
 RUN mkdir -p logs data/faces
@@ -40,10 +40,6 @@ ENV APP_PORT=8080
 
 # Expose port
 EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD java -cp app.jar com.waste.management.health.HealthChecker || exit 1
 
 # Run the application
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

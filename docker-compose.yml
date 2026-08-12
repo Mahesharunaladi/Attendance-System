@@ -25,7 +25,7 @@ services:
   # Waste Management Application Service
   app:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: waste-management-app
     environment:
@@ -39,8 +39,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./logs:/app/logs
-      - ./data/faces:/app/data/faces
+      - ./backend/logs:/app/logs
+      - ./backend/data/faces:/app/data/faces
     depends_on:
       mysql:
         condition: service_healthy

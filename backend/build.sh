@@ -98,15 +98,15 @@ setup_database() {
         echo ""
 
         if [ -z "$DB_PASSWORD" ]; then
-            mysql -u root < sql/database_setup.sql
+            mysql -u root < ../sql/database_setup.sql
         else
-            mysql -u root -p"$DB_PASSWORD" < sql/database_setup.sql
+            mysql -u root -p"$DB_PASSWORD" < ../sql/database_setup.sql
         fi
 
         print_success "Database setup completed"
     else
         print_warning "MySQL not found. Please run SQL setup manually:"
-        echo "mysql -u root -p < $PROJECT_DIR/sql/database_setup.sql"
+        echo "mysql -u root -p < $PROJECT_DIR/../sql/database_setup.sql"
     fi
 }
 
@@ -136,7 +136,7 @@ docker_deploy() {
     print_success "Docker image built"
 
     print_info "Starting Docker containers..."
-    docker-compose up -d
+    docker-compose -f ../docker-compose.yml up -d
 
     print_success "Docker containers started"
     echo -e "${BLUE}Application is available at: http://localhost:8080${NC}"

@@ -18,7 +18,7 @@
         </rollingPolicy>
     </appender>
 
-    <logger name="com.attendancesystem" level="DEBUG"/>
+    <logger name="com.waste.management" level="DEBUG"/>
     <logger name="org.hibernate" level="INFO"/>
     <logger name="org.springframework" level="INFO"/>
 

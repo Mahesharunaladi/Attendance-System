@@ -54,8 +54,8 @@ echo "Logs will be written to: $PROJECT_DIR/logs/waste-management.log"
 echo ""
 
 # Start the application
-java -jar "$JAR_FILE" \
-    -Dspring.application.name="Attendance System" \
+java -Dspring.application.name="Attendance System" \
     -Dlogging.level.root=INFO \
-    -Dlogging.file.name="$PROJECT_DIR/logs/waste-management.log"
+    -Dlogging.file.name="$PROJECT_DIR/logs/attendance-system.log" \
+    -jar "$JAR_FILE"
 

@@ -77,6 +77,11 @@ Attendance-System/
 │   │   │   └── resources/     # Configuration files
 │   │   └── test/              # Unit tests
 │   ├── pom.xml                # Maven configuration
+│   ├── Dockerfile              # Backend Docker image
+│   ├── build.sh               # Backend build helper
+│   ├── start-backend.sh       # Backend startup helper
+│   ├── data/                  # Face data and runtime files
+│   ├── logs/                  # Backend logs
 │   └── README.md              # Backend documentation
 ├── frontend/                   # React frontend
 │   ├── src/
@@ -87,10 +92,7 @@ Attendance-System/
 │   ├── package.json          # NPM configuration
 │   └── README.md             # Frontend documentation
 ├── sql/                        # Database setup scripts
-├── data/                       # Data files (face data, etc.)
-├── uploads/                    # Upload directory for images
 ├── docker-compose.yml          # Docker compose configuration
-├── Dockerfile                  # Docker configuration
 └── pom.xml                     # Parent Maven configuration
 ```
 
@@ -190,14 +192,14 @@ npm test
 
 ## 📝 Logging
 
-Logs are configured in `src/main/resources/log4j2.xml`:
+Logs are configured in `backend/src/main/resources/logback.xml`:
 - **Console Logging**: Real-time log output
 - **File Logging**: Persistent logs in `logs/` directory
 - **Log Levels**: INFO, DEBUG, ERROR, WARN
 
 View logs:
 ```bash
-tail -f logs/waste-management.log
+tail -f backend/logs/attendance-system.log
 ```
 
 ## 🤝 Contributing
