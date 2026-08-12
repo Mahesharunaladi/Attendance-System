@@ -1,15 +1,3 @@
--- ============================================================================
--- DRIVER RECOGNITION SETUP - SQL COMMANDS
--- ============================================================================
--- This file contains SQL commands to set up a driver in the database
--- for face recognition with auto-detail fetching
--- ============================================================================
-
--- ============================================================================
--- STEP 1: ADD DRIVER TO DATABASE
--- ============================================================================
--- Replace the values with your actual information
-
 INSERT INTO worker (
     employee_id,
     full_name,
